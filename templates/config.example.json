@@ -1,0 +1,36 @@
+{
+  "$comment": "Library configuration — single source of truth for all scripts. Copy as <library-root>/config.json. Scripts read ONLY this file; users edit keywords/sources here, never the scripts.",
+  "name": "my-kb",
+  "type": "intel",
+  "$comment_type": "intel | import | hybrid",
+  "language": "en",
+  "$comment_language": "language for generated notes/briefs (e.g. en, zh)",
+  "topics": [
+    {
+      "key": "example-topic",
+      "label": "Example Topic",
+      "keywords": ["exact searchable phrase", "another phrase"]
+    }
+  ],
+  "sources": [
+    { "kind": "rss", "name": "some-blog", "url": "https://example.com/feed.xml" },
+    { "kind": "arxiv", "name": "arxiv-topic", "query": "\"exact phrase\"", "max_results": 5 },
+    { "kind": "hn", "name": "hn-topic", "query": "keyword", "min_points": 50 }
+  ],
+  "thresholds": {
+    "keep": 0.7
+  },
+  "cadence": "daily",
+  "$comment_cadence": "daily | weekly | manual — informational; actual scheduling is registered separately by the user",
+  "keeper": {
+    "enabled": true,
+    "name": "Keeper"
+  },
+  "paths": {
+    "notes": "notes",
+    "briefs": "briefs",
+    "inbox": "inbox",
+    "pipeline": "_pipeline"
+  },
+  "toolkit_version": "0.1.0"
+}
