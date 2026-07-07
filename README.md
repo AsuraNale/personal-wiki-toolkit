@@ -72,9 +72,12 @@ Details and per-platform caveats: `docs/compatibility.md`.
 
 ## Status
 
-v0.1 — under active construction (framework layer complete; scripts and
-worked examples landing). Methodology distilled from three production
-libraries that ran for months with daily automation and independent QC.
+**v0.1 — pre-1.0.** Content complete and **end-to-end validated on Claude Code**:
+a fresh agent, given only this repo and a topic, built a working library from
+scratch (live collection, curation, keeper) with no author guidance.
+Cross-ecosystem verification on **Codex and WorkBuddy is still pending** before
+1.0. Methodology distilled from three production libraries that ran for months
+with daily automation and independent QC.
 
 ## License
 
