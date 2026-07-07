@@ -31,8 +31,13 @@ Collect, in whatever order the conversation allows:
    - any domain → RSS/Atom feeds of the blogs/newsletters/news sites the user
      already reads (ask them for 2–5; these are usually the best signal);
    - avoid: anything paywalled or ToS-hostile (SKILL.md rule 5).
+   - **also avoid Cloudflare-protected sites** — some news sites (e.g. Videocardz)
+     return HTTP 403 to the polite stdlib fetcher; the pipeline correctly marks them
+     `gap`, but they simply won't collect. Prefer a site that serves an open RSS/Atom
+     feed; when in doubt, the first fetch will tell you (`gap` vs `ok`).
    Aim for 3–8 sources total. More sources ≠ better — every source adds noise
-   to judge.
+   to judge. Verify each feed actually fetches on the first run — swap out any
+   that come back `gap`.
 4. **Cadence & threshold.** Defaults: daily collection, keep-threshold 0.7
    (items you judge below it stay in Bronze, invisible). Only surface these
    if the user seems opinionated; otherwise state the defaults and move on.
@@ -91,14 +96,17 @@ to SQLite.
 
 ## Phase 4 — Handover
 
-1. If keeper enabled: instantiate `templates/keeper-instructions.template.md`
-   into the library as `keeper.md` (fill domain, duties, red lines — see
-   `references/keeper.md` for the role definition).
+1. If keeper enabled: run the full keeper setup in `setup/SCAFFOLD.md` §7
+   (name it → pick type preset → "what's the worst mistake it could make?" →
+   instantiate `templates/keeper-instructions.template.md` as `keeper.md` →
+   first-run rite: verify the library map against the REAL library → hand off).
+   Role definition: `references/keeper.md`.
 2. Give the user the **one-page care guide** (write it into the library as
    `CARE.md`, in their language):
    - daily/whenever: skim the new brief (2 min);
    - promote what deserves permanence, dismiss what doesn't — with reasons;
-   - weekly: ask the library agent "what's new and what's stale?" (coverage);
+   - weekly: ask the library agent "what's new, what's stale, and any
+     demand-board candidates?" (coverage + emergent-topic proposals);
    - monthly: skim `references/qc-rubric.md` checks — or just ask the agent
      to run a self-audit and show evidence.
 3. Remind them: the toolkit repo can be deleted; the library is

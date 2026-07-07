@@ -2,7 +2,7 @@
 
 > Build, feed, and curate your personal wiki — with an AI librarian that
 > never skips QC.
-> 让 AI 管家帮你从零建库、持续喂库、按纪律策展。
+> 让 AI 管家帮你从零建库、持续喂库、按纪律策展。 · 中文版:[README.zh.md](README.zh.md)
 
 An **agent skill toolkit** that interviews you (or ingests your existing
 folders) to build a personal knowledge base from scratch — Markdown + SQLite
@@ -42,6 +42,9 @@ my-kb/
   Silver, only explicit promotion makes Gold. Dismissals carry reasons.
 - **The agent is the judge** — no extra API keys, works with whatever model
   hosts it.
+- **Demand-driven growth**: the keeper logs what you keep asking about but the
+  library doesn't hold, and once it recurs it *proposes* adding it as a tracked
+  topic — you approve; it never grows silently.
 - **QC rubrics included**: your library comes with the checklists to audit
   its own librarian. Trust, but verify — mechanically.
 - **Level-0 mode**: no Python? Everything still works with markdown-only

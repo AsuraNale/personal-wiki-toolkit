@@ -1,0 +1,22 @@
+{
+  "name": "espresso-log",
+  "type": "intel",
+  "language": "en",
+  "topics": [
+    { "key": "grinders", "label": "Grinders", "keywords": ["espresso grinder", "burr grinder", "grinder alignment"] },
+    { "key": "machines", "label": "Machines", "keywords": ["espresso machine", "flow control", "PID"] },
+    { "key": "technique", "label": "Technique", "keywords": ["espresso dialing in", "puck prep", "pressure profiling"] },
+    { "key": "beans", "label": "Beans & roasts", "keywords": ["single origin espresso", "roast for espresso"] }
+  ],
+  "sources": [
+    { "kind": "rss", "name": "home-barista", "url": "https://www.home-barista.com/feed.example.xml", "topic": "technique" },
+    { "kind": "rss", "name": "coffee-blog", "url": "https://example-coffee-blog.com/feed.xml", "topic": "beans" },
+    { "kind": "hn", "name": "hn-espresso", "query": "espresso", "min_points": 40 }
+  ],
+  "thresholds": { "keep": 0.7 },
+  "cadence": "daily",
+  "keeper": { "enabled": true, "name": "Crema" },
+  "demand_tracking": { "enabled": true, "propose_threshold": 3 },
+  "paths": { "notes": "notes", "briefs": "briefs", "inbox": "inbox", "pipeline": "_pipeline" },
+  "toolkit_version": "0.1.0"
+}

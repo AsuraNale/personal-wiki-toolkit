@@ -22,7 +22,7 @@ missing pieces, leave existing ones alone, and say what you skipped).
 │   ├── judgments.json   → your scores; consumed by `pipeline.py apply`
 │   └── logs/            fetch/run logs
 ├── kb.db                index: notes, tags, links, coverage   (SQLite)
-├── intel.db             collection ledger: seen, silver, dismissed (SQLite)
+├── intel.db             ledger: seen, silver, fetch_log, demand (SQLite)
 ├── scripts/             instantiated from toolkit templates (see step 4)
 └── keeper.md            librarian instructions (if keeper enabled)
 ```
@@ -63,8 +63,8 @@ Write it in the user's language. Both filenames get identical content.
 ## 4. Scripts
 
 Copy from toolkit `scripts/` into library `scripts/`: `pipeline.py`,
-`fetch_rss.py`, `index_db.py`. Do not modify them during scaffold; they are
-config-driven. (Toolkit updates → user re-copies; scripts carry a version
+`fetch_rss.py`, `index_db.py`, and (if demand-tracking is on) `demand.py`. Do not
+modify them during scaffold; they are config-driven. (Toolkit updates → user re-copies; scripts carry a version
 string so `pipeline.py stats` can report staleness.)
 
 Then verify the runtime: run `python scripts/pipeline.py selftest`. If
@@ -95,12 +95,47 @@ and say *run a collection round*" works forever, no registration needed.
 Design rationale and failure discipline for anything scheduled:
 `references/pipeline-discipline.md` (read before generating the commands).
 
-## 7. Exit checklist
+## 7. The keeper (if `config.keeper.enabled`)
+
+A keeper is a standing role definition (`keeper.md`) that any future agent session
+in this library assumes — see `references/keeper.md` for the full role. Set it up:
+
+1. **Name it.** Ask the owner to pick the keeper's name — a *named* role gets
+   treated as staff; an unnamed one gets ignored.
+2. **Pick the type preset:** intel (tracks a domain) / data (structured numbers) /
+   full-run (operates the library end to end, incl. proactive alerts). This selects
+   the duties + red-line flavor in the template.
+3. **Ask the one question that writes the top red line:** *"What is the worst
+   mistake this keeper could make?"* The answer becomes the ⛔ first red line — and
+   capture it as *the actual phrasing to use*, not just a principle (principles get
+   interpreted away; a script of what to say does not).
+4. **Instantiate** `templates/keeper-instructions.template.md` → `keeper.md`: fill
+   every {placeholder}, keep ONE type preset, write in the owner's language, keep it
+   under ~2 pages. Point the library's CLAUDE.md/AGENTS.md at it.
+5. **First-run rite — do it now, then it's done** (this is NOT a permanent section
+   of keeper.md; it's a one-time hazing). On the keeper's first session, have it:
+   - walk the actual library and report back what it understands the library to be;
+   - **VERIFY section 3 (the library map) against the REAL library** — open the DBs
+     / list the files, confirm table names, columns, row counts. This is where
+     paper-vs-reality gaps surface (a real setup caught two: a column named other
+     than assumed, and a status kept in note-text instead of a column). Fix the map
+     to match reality;
+   - run one real task end to end (a query, or a collection round) and confirm it works.
+6. **Hand off.** Tell the owner how to activate the keeper (open a session in the
+   library dir → it reads `keeper.md` and becomes the keeper) and the daily care habit.
+
+If demand-tracking is on, the keeper logs out-of-library queries with
+`demand.py log "<category>" "<question>"` and surfaces a demand board with
+`demand.py board` (propose-not-auto; owner approves growth) — see `references/keeper.md`.
+
+## 8. Exit checklist
 
 - [ ] tree exists, nothing user-owned was moved without a confirmed plan
 - [ ] config.json valid (pipeline.py selftest validates it)
 - [ ] CLAUDE.md/AGENTS.md written, in the user's language, red lines included
 - [ ] selftest passed (or Level-0 declared)
 - [ ] schedule registered by user, or manual mode acknowledged
+- [ ] if keeper enabled: `keeper.md` instantiated, type preset chosen, top red line
+      captured as phrasing, first-run rite done (map verified against the real library)
 - [ ] → return to your setup flow; the first-run phase (INTERVIEW Phase 3)
       is NOT optional

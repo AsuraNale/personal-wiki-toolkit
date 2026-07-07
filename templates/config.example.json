@@ -26,6 +26,11 @@
     "enabled": true,
     "name": "Keeper"
   },
+  "demand_tracking": {
+    "enabled": true,
+    "$comment": "keeper logs out-of-library queries; daily self-check surfaces a demand board; propose (not auto-add) a topic once it recurs past propose_threshold. Growth always needs owner approval.",
+    "propose_threshold": 3
+  },
   "paths": {
     "notes": "notes",
     "briefs": "briefs",
