@@ -23,7 +23,7 @@ Items ≥ the config threshold (default 0.7) become Silver; the rest stay
 Bronze with their score recorded. `pipeline.py apply` consumes this file —
 you never write the database yourself.
 
-## The four judging disciplines
+## The five judging disciplines
 
 1. **Judge substance, not keywords.** The single most common failure. Both
    production judges initially scored anything containing the magic words
@@ -44,6 +44,14 @@ you never write the database yourself.
    writing it forces you to notice when you're scoring a guess. If you
    genuinely cannot tell what something is from the metadata, that IS the
    uncertainty case: score ≤0.5.
+5. **Record numbers honestly — an estimate is not a source.** When a one_line or
+   note carries a figure (price, %, benchmark, spec), quote the source's number
+   as-is — never round up or inflate (a real build turned a source's "+6%" into
+   "+20–30%"). A value you estimated is not a sourced value: label it an estimate,
+   never attach a real outlet's name to it, and don't let an estimate exceed the
+   range the source gave. No reliable source → "to verify", not a confident guess.
+   (Matters most for structured/price libraries — the table looks authoritative,
+   so a padded number reads as fact.)
 
 Calibration exercise (recommended monthly, 10 minutes): user re-judges 10
 random machine-judged items blind; agreement below ~80% means the criteria

@@ -39,9 +39,14 @@ known caveats follow (verified against each ecosystem's docs, 2026-07).
 - **Caveats:** WorkBuddy ships a **built-in "本地知识库构建" skill** — make the
   description distinguish this toolkit (dual-layer store + collection pipeline +
   tiered curation + keeper) to avoid trigger collisions. **A Python runtime is not
-  guaranteed** — if the scripts can't run, fall back to **Level-0 mode** (Markdown-only
-  index + the agent's own web tools; see `SKILL.md`). Local file access needs the
-  user's explicit authorization.
+  guaranteed** — but before falling back to **Level-0 mode**, test `py -X utf8` on
+  Windows: bare `python` there is often a Microsoft Store alias that falsely reports
+  "not installed", and a real build wrongly went Level-0 despite having Python 3.12
+  (see `SKILL.md` § Level-0). Local file access needs the user's explicit
+  authorization. If the host runs a **global skill that auto-starts on session
+  launch** (e.g. a productivity/todo skill), it can pre-empt the keeper boot — tell
+  the agent explicitly to read the library's `CLAUDE.md` + `keeper.md` and adopt
+  that role.
 - Optionally add `agent_created: true` to the frontmatter so WorkBuddy can edit the
   skill itself (a WorkBuddy-specific field; Claude Code / OpenClaw ignore it — safe to
   add. Keep it OUT of the core repo copy so `skills-ref validate` stays clean; add it

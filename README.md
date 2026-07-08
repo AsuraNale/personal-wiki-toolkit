@@ -72,12 +72,14 @@ Details and per-platform caveats: `docs/compatibility.md`.
 
 ## Status
 
-**v0.1 — pre-1.0.** Content complete and **end-to-end validated on Claude Code**:
-a fresh agent, given only this repo and a topic, built a working library from
-scratch (live collection, curation, keeper) with no author guidance.
-Cross-ecosystem verification on **Codex and WorkBuddy is still pending** before
-1.0. Methodology distilled from three production libraries that ran for months
-with daily automation and independent QC.
+**v0.1 — pre-1.0.** Content complete and end-to-end validated on **Claude Code**
+(a fresh agent built a working library from just this repo + a topic, unaided)
+and on **WorkBuddy / CodeBuddy** — a second, independent build (Level-0 *and*
+full-SQLite modes) that surfaced five refinements now folded in: Windows `py`
+runtime detection, a hardened prompt-injection red line, numeric-honesty rules,
+a Level-0 run-log, and a Level-0 write carve-out. **Codex verification is the
+last gate before 1.0.** Methodology distilled from three production libraries
+that ran for months with daily automation and independent QC.
 
 ## License
 

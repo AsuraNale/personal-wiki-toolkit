@@ -86,6 +86,12 @@ problem to raise with the user — not a blip to average into "mostly working."
 Discipline that lives only in prose gets lost; discipline written to a `status`
 column gets enforced.
 
+**Level-0 (no DB):** the health record is a Markdown run-log instead —
+`_pipeline/logs/YYYY-MM-DD.md` per round, listing each source's outcome
+(ok / empty / gap / failed) and counts. Same purpose: so "nothing new" is always
+distinguishable from "the fetch didn't run," and what was actually fetched stays
+separable from what the agent merely asserts it fetched.
+
 ## 7. Scheduling is the user's to own
 
 Registering a scheduled task often needs privileges an agent shouldn't assume,
