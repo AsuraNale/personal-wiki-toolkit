@@ -56,11 +56,11 @@ my-kb/
 
 ## 状态
 
-**v0.1 —— pre-1.0。** 内容完整,已在 **Claude Code**(全新 agent 只拿 repo + 主题就从零建出能用的库,
-无指导)和 **WorkBuddy / CodeBuddy**(第二次独立建库,Level-0 与完整 SQLite 两种模式都跑通)上端到端
-验证;后者暴露的五处改进已并入:Windows `py` 运行时检测、强化的注入红线、数值诚实规则、Level-0 运行
-日志、Level-0 写入豁免。**Codex 验证是通往 1.0 的最后一关。** 方法论提炼自三个跑了数月、每日自动化 +
-独立 QC 的生产资料库。
+**v0.1.1 —— pre-1.0。** 内容完整,已在**三个独立生态**端到端验证 —— Claude Code、WorkBuddy / CodeBuddy
+(智谱/GLM)、Codex(GPT 系):各是一个全新 agent 只拿 repo + 主题就从零建出能用的库,Level-0 与完整
+SQLite 两种模式都跑通。这些实测暴露的改进已并入(0.1.1):稳健 Python 探测(Store/沙盒别名陷阱)、强化
+注入红线、数值诚实规则、Level-0 运行日志、Level-0 写入豁免、data 型 watchlist 范围界定、原始数据行自动
+追加。**仍 pre-1.0** —— 1.0 打标前继续硬化。方法论提炼自三个跑了数月、每日自动化 + 独立 QC 的生产资料库。
 
 ## License
 

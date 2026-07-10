@@ -72,14 +72,16 @@ Details and per-platform caveats: `docs/compatibility.md`.
 
 ## Status
 
-**v0.1 — pre-1.0.** Content complete and end-to-end validated on **Claude Code**
-(a fresh agent built a working library from just this repo + a topic, unaided)
-and on **WorkBuddy / CodeBuddy** — a second, independent build (Level-0 *and*
-full-SQLite modes) that surfaced five refinements now folded in: Windows `py`
-runtime detection, a hardened prompt-injection red line, numeric-honesty rules,
-a Level-0 run-log, and a Level-0 write carve-out. **Codex verification is the
-last gate before 1.0.** Methodology distilled from three production libraries
-that ran for months with daily automation and independent QC.
+**v0.1.1 — pre-1.0.** Content-complete and end-to-end validated on **three
+independent ecosystems** — Claude Code, WorkBuddy / CodeBuddy (Zhipu/GLM), and
+Codex (GPT-class) — each a fresh agent that built a working library from just this
+repo + a topic, unaided, in Level-0 *and* full-SQLite modes. Those runs surfaced
+refinements now folded in (0.1.1): robust Python detection (Store / sandbox alias
+traps), a hardened prompt-injection red line, numeric-honesty rules, Level-0
+run-logs, a Level-0 write carve-out, data-type watchlist-scoping, and auto-append
+of raw data rows. **Still pre-1.0** — hardening continues before the 1.0 tag.
+Methodology distilled from three production libraries that ran for months with
+daily automation and independent QC.
 
 ## License
 

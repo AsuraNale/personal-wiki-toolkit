@@ -22,6 +22,18 @@ If the user actually wants "research X and give me a report" — that's a one-sh
 research task, not a library. If they want "track news/papers about X" — that's
 intel-type. Don't force a data library onto a job that isn't one.
 
+## Scope the watchlist before building
+
+A data library tracks a **set of entities** (SKUs, tickers, series). Pin that set
+down with the user first — the single most common under-spec is tracking *one*
+representative per category when the user wanted the *whole segment*. Ask
+explicitly: "the specific items you named, or every option in that class?" (one
+RTX 5070, or the entire 50-series lineup?). The watchlist lives in `config.json`
+as one entry per entity, so adding more is just more config rows — err toward
+asking. A build that silently tracks one-per-category reads as complete when it
+isn't. (A real Codex build tracked exactly one SKU per category because the
+request said "one row per category"; the scope, not the toolkit, was the gap.)
+
 ## The shape of the work
 
 ETL = **E**xtract (fetch from source) → **T**ransform (parse / normalize / derive)
@@ -57,6 +69,18 @@ data library specifically:
    `pipeline-discipline.md`): a fetch log with a `status` column
    (ok / empty / gap / failed) so "this series has no data" can never be confused
    with "the fetch failed."
+
+## Raw observations auto-append; only analysis is curated
+
+Medallion still applies — but map it correctly for data. Each collection round
+**appends raw observation rows automatically**: a price snapshot is a timestamped,
+sourced Bronze/Silver *fact*, not a Gold claim, so it goes straight into the table
+on every run. Do NOT gate raw snapshots behind human promotion. What IS
+human-gated is the **curated conclusion** — "this is a good buy window", a chosen
+long-term watch item, an analysis note — that's Gold. A real build stalled its own
+price time-series by *proposing* snapshot `INSERT`s for the user to run each week
+instead of appending them; the table never grew a second data point. **Append the
+facts every round; curate the conclusions.**
 
 ## Fetching structured data
 

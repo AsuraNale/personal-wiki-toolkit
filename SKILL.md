@@ -11,7 +11,7 @@ description: >-
 license: MIT
 metadata:
   author: personal-wiki-toolkit
-  version: "0.1.0"
+  version: "0.1.1"
 ---
 
 # Personal Wiki Toolkit
@@ -55,7 +55,10 @@ Ask at most THREE questions to classify the job, then follow exactly one path:
    data) → **data/ETL-type**. Read `references/etl-guide.md` and be honest with
    the user up front: for this type the toolkit provides methodology, worked
    examples, and discipline checklists — you will design the schema and
-   fetchers together with the user; there is no one-click scaffold.
+   fetchers together with the user; there is no one-click scaffold. **Pin down the
+   watchlist scope first** — which specific entities/SKUs, or a whole segment (one
+   RTX 5070, or the entire 50-series lineup?); don't default to one row per
+   category. Details: `references/etl-guide.md`.
 4. Mixed? Import first, then add collection (path 2 → path 1's source steps).
 
 ## File map (read on demand — conditions matter)
@@ -137,11 +140,20 @@ SKILL.md because they must never be skipped:
 
 **First, make sure Python is really absent — don't false-negative into Level-0.**
 On Windows, bare `python` is often a Microsoft Store *alias* that prints a
-"not installed" message even when Python IS installed; test `py -X utf8 --version`
-(and `py -X utf8 -c "import sqlite3"`) before concluding there is no runtime.
-On macOS/Linux try `python3`. (A real WorkBuddy build wrongly dropped to Level-0
-this way — it had Python 3.12 the whole time.) Only go Level-0 if `py`/`python3`
-genuinely fail or are older than 3.9.
+"not installed" message even when Python IS installed; and in a sandboxed agent
+(e.g. the Codex CLI) even `py`/`python` can be blocked as *execution aliases*
+while a real `python.exe` runs fine. **A single failed `python` call is NOT proof
+of no runtime.** Detect Python properly — try, in order, until one works:
+1. `py -X utf8 --version` (Windows launcher) / `python3 --version` (macOS/Linux);
+2. `where python` & `where py` (or `which python3`) to locate a real interpreter;
+3. the **full path** to a found interpreter, e.g.
+   `C:\Users\<you>\AppData\Local\Programs\Python\Python3xx\python.exe --version`,
+   which bypasses Store/WindowsApps aliases and many sandbox alias blocks.
+Confirm `import sqlite3` works too. Only go Level-0 if ALL of these genuinely fail
+(or Python is < 3.9). **Two production tests — a WorkBuddy build and a Codex build
+— both false-negatived into Level-0 with Python 3.12 installed and NOT truly
+blocked (one via the Store alias, one via a sandbox launcher alias that the full
+`python.exe` path defeated). Don't be the third.**
 
 If the environment truly cannot run Python, everything still works — degrade
 gracefully:

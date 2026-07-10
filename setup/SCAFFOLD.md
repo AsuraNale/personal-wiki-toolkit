@@ -68,9 +68,11 @@ modify them during scaffold; they are config-driven. (Toolkit updates → user r
 string so `pipeline.py stats` can report staleness.)
 
 Then verify the runtime. **On Windows run `py -X utf8 scripts/pipeline.py
-selftest`** — bare `python` is often a Microsoft Store alias that falsely reports
-"not installed", so a `python` failure is NOT proof of no runtime; test `py`
-first. On macOS/Linux use `python3`. Only if Python genuinely can't run or is too
+selftest`**; on macOS/Linux use `python3`. A single failed `python` call is NOT
+proof of no runtime — bare `python` may be a Microsoft Store alias, and in a
+sandbox even `py` can be alias-blocked while a real `python.exe` runs. Before
+declaring Level-0, run the **full detection sequence in SKILL.md § Level-0**
+(`py`/`python3` → `where`/`which` → the full `python.exe` path). Only if Python genuinely can't run or is too
 old (needs 3.9+), switch the plan to **Level-0 mode** (SKILL.md) and say so
 plainly — do not scaffold broken automation, and do not false-negative into
 Level-0 when a runtime is right there.

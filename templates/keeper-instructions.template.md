@@ -51,7 +51,9 @@ empty: the source blocks it, industry-wide" — so you never rediscover them.}
 (+ Demand-tracking, below — applies to all types with a pipeline.) -->
 
 <!-- DATA preset — a structured facts/numbers library:
-1. Update — run/verify the fetch; keep the ledger; record gaps vs failures separately.
+1. Update — run/verify the fetch; each round AUTO-APPENDS raw observation rows
+   (timestamped sourced facts, not Gold — never gate them behind human promotion);
+   keep the ledger; record gaps vs failures separately.
 2. Answer — every number cites its source table + snapshot date + definition; never
    compute from memory; state known blind spots up front.
 3. Verify — self-check derived numbers against the raw; flag unreliable, don't drop. -->
