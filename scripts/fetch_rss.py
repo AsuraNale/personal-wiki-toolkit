@@ -41,7 +41,7 @@ from datetime import datetime, timezone
 from email.utils import parsedate_to_datetime
 from pathlib import Path
 
-TOOLKIT_VERSION = "0.1.0"
+TOOLKIT_VERSION = "0.1.1"
 USER_AGENT = "personal-wiki-toolkit/%s (personal research; polite fetcher)" % TOOLKIT_VERSION
 TIMEOUT = 20
 SUMMARY_MAX = 300
@@ -192,20 +192,28 @@ def fetch_arxiv(src):
 
 
 def fetch_hn(src):
-    """Hacker News via the public Algolia API; min_points filters noise (default 50)."""
+    """Hacker News via the public Algolia API; min_points filters noise (default 50).
+
+    Points filtering is done CLIENT-SIDE (fetch, then drop hits below min_points).
+    Algolia's server-side `numericFilters=points>=N` is fragile — a malformed value or
+    encoding issue makes the endpoint 400 and the whole source silently returns nothing;
+    client-side keeps a transient hiccup from masquerading as 'no stories'."""
     query = (src.get("query") or "").strip()
     if not query:
         raise FetchGap("hn source has no 'query' in config.json")
     pts = int(src.get("min_points", 50))
-    url = ("https://hn.algolia.com/api/v1/search_by_date?query=%s&tags=story"
-           "&numericFilters=points%%3E%%3D%d&hitsPerPage=%d"
-           % (urllib.parse.quote(query), pts, int(src.get("max_results", 10))))
+    # over-fetch a bit so the client-side points filter still yields ~max_results
+    want = int(src.get("max_results", 10))
+    url = ("https://hn.algolia.com/api/v1/search_by_date?query=%s&tags=story&hitsPerPage=%d"
+           % (urllib.parse.quote(query), max(want * 4, 20)))
     try:
         data = json.loads(_http_get(url))
     except (json.JSONDecodeError, ValueError):
         raise FetchGap("HN Algolia returned non-JSON")
     items = []
     for h in data.get("hits", []):
+        if (h.get("points") or 0) < pts:                 # client-side points filter
+            continue
         title = (h.get("title") or "").strip()
         link = h.get("url") or ("https://news.ycombinator.com/item?id=%s" % h.get("objectID"))
         if not title:
@@ -216,6 +224,8 @@ def fetch_hn(src):
             "summary": "HN story, %s points" % h.get("points", "?"),
             "date": (h.get("created_at") or "")[:10],
         })
+        if len(items) >= want:
+            break
     return items
 
 

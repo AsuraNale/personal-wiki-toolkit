@@ -40,7 +40,7 @@ from pathlib import Path
 
 import fetch_rss
 
-TOOLKIT_VERSION = "0.1.0"
+TOOLKIT_VERSION = "0.1.1"
 DEFAULT_THRESHOLD = 0.7
 SILVER_STALE_DAYS = 14
 
@@ -258,6 +258,26 @@ def cmd_fetch(root, config):
 # ---------------------------------------------------------------- apply (judgments -> Silver)
 
 
+def source_health(conn):
+    """One-line source-health banner from the latest fetch status per source.
+    A failed/gap fetch must never be silently read as 'a quiet day' — the banner
+    flags ANY gap or failed (gap = permanent e.g. an HN 400; failed = transient),
+    so a short or empty brief is honestly attributed."""
+    rows = conn.execute(
+        "SELECT source, status FROM fetch_log f "
+        "WHERE ts = (SELECT MAX(ts) FROM fetch_log WHERE source = f.source)").fetchall()
+    if not rows:
+        return "source health: no fetch on record yet"
+    per = {s: st for s, st in rows}
+    bad = {s: st for s, st in per.items() if st in ("gap", "failed")}
+    if bad:
+        return ("WARNING source health: %d/%d sources failed to fetch (%s) - this is a FETCH "
+                "problem, not 'no news'; retry / check config" %
+                (len(bad), len(per), ", ".join("%s=%s" % (s, st) for s, st in sorted(bad.items()))))
+    return ("source health: all %d sources ok (%s) - a short brief today is a genuinely quiet "
+            "day, not a fetch failure" % (len(per), ", ".join(sorted(per))))
+
+
 def write_draft_brief(root, config, conn):
     """(Re)generate today's Silver draft brief from the ledger.
 
@@ -287,6 +307,8 @@ def write_draft_brief(root, config, conn):
         "---",
         "",
         "# Auto intel brief - %s - %s" % (name, day),
+        "",
+        "> **%s**" % source_health(conn),   # a short/empty brief must never be misread as 'nothing happened'
         "",
         "> Silver draft: fetched by pipeline, judged by the host agent, kept at >= %.2f. "
         "Promote items into Gold notes/briefs, or dismiss with a reason "
