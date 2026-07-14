@@ -41,7 +41,7 @@ from datetime import datetime, timezone
 from email.utils import parsedate_to_datetime
 from pathlib import Path
 
-TOOLKIT_VERSION = "0.1.1"
+TOOLKIT_VERSION = "0.1.2"
 USER_AGENT = "personal-wiki-toolkit/%s (personal research; polite fetcher)" % TOOLKIT_VERSION
 TIMEOUT = 20
 SUMMARY_MAX = 300

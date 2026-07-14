@@ -40,7 +40,7 @@ from pathlib import Path
 
 import fetch_rss
 
-TOOLKIT_VERSION = "0.1.1"
+TOOLKIT_VERSION = "0.1.2"
 DEFAULT_THRESHOLD = 0.7
 SILVER_STALE_DAYS = 14
 

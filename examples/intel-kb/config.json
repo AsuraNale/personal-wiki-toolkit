@@ -18,5 +18,5 @@
   "keeper": { "enabled": true, "name": "Crema" },
   "demand_tracking": { "enabled": true, "propose_threshold": 3 },
   "paths": { "notes": "notes", "briefs": "briefs", "inbox": "inbox", "pipeline": "_pipeline" },
-  "toolkit_version": "0.1.1"
+  "toolkit_version": "0.1.2"
 }

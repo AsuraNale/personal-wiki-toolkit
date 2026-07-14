@@ -11,7 +11,7 @@ description: >-
 license: MIT
 metadata:
   author: personal-wiki-toolkit
-  version: "0.1.1"
+  version: "0.1.2"
 ---
 
 # Personal Wiki Toolkit
@@ -61,6 +61,25 @@ Ask at most THREE questions to classify the job, then follow exactly one path:
    category. Details: `references/etl-guide.md`.
 4. Mixed? Import first, then add collection (path 2 → path 1's source steps).
 
+## Where it runs: local by default, cloud by choice
+
+Orthogonal to the path above — the library can live on the user's machine or in a
+cloud agent session. **For a first library, recommend local.** A cloud sandbox
+routes traffic through an egress allowlist, which makes it the strongest library
+*builder* and the weakest *collector*: two independent cloud builds lost most of
+their sources to policy denials, one of them 7 of 8. Local has no such limit,
+collects for real, and lets you finish the loop (rule 7) in one sitting.
+
+Cloud earns its place when the user needs the library to run with their PC off,
+wants it reachable from anywhere, or won't install Python. **Best of both — the
+hybrid: build and curate in the cloud, run the collector locally.**
+
+If the library will run in the cloud, or you are running in one, read
+`references/cloud.md` **before promising collection**. Cloud adds a mandatory step
+this toolkit otherwise assumes away (the egress allowlist) plus three realities:
+clone the toolkit instead of web-fetching it, the library lives in the repo and
+the user pulls it back, and you can likely only push `claude/*` branches.
+
 ## File map (read on demand — conditions matter)
 
 | File | Read it when |
@@ -75,6 +94,7 @@ Ask at most THREE questions to classify the job, then follow exactly one path:
 | `references/pipeline-discipline.md` | Before you write or schedule any fetch automation |
 | `references/storage.md` | When designing the SQLite schema or deciding what goes in Markdown vs the index |
 | `references/etl-guide.md` | Data/ETL-type libraries (path 3) |
+| `references/cloud.md` | The library will run in a cloud session/routine, or you are running in one — read before promising collection (egress allowlist, clone-don't-fetch, repo-not-local-paths, `claude/*` branch limit) |
 | `templates/config.example.json` | When generating the library's `config.json` (schema reference) |
 | `scripts/` | Deterministic operations — fetching, dedup, indexing. See "Division of labor" below |
 | `docs/compatibility.md` | Only if the user asks about installing this skill on a specific agent platform |
@@ -120,10 +140,16 @@ SKILL.md because they must never be skipped:
    that permit it. No paywalls, no scraping against terms of service, no
    credentials the user didn't hand you, and no storing full article text —
    store title + link + summary + your judgment.
-6. **A failed fetch is not an empty result.** If a source errors or times
-   out, record it as a failure to retry — never conclude "nothing new" from a
-   broken fetch. (A production library once mislabeled a whole ticker as
-   "has no data" because one HTTP 504 was misread as emptiness.)
+6. **A failed fetch is not an empty result — and neither is a blocked one.** If
+   a source errors, times out, or is **refused by an egress policy** (a cloud
+   sandbox proxy returning 403 because the domain isn't allowlisted), record it
+   as a failure to retry — never conclude "nothing new" from a fetch that never
+   happened. (A production library mislabeled a whole ticker "has no data"
+   because one HTTP 504 was misread as emptiness; a cloud run lost 7 of 8
+   sources to policy denials and only its health banner caught it.) **When a
+   policy blocks you, report it — never route around it:** no alternate
+   proxies, no mirror scraping. Name the refused domains and what to allow, and
+   say what the round honestly collected. Details: `references/cloud.md`.
 7. **Finish the loop.** Setup is not done when files exist. It is done when
    the first collection ran, YOU judged the results, the first brief exists,
    and the user has performed one promote and one dismiss with their own

@@ -50,6 +50,26 @@ my-kb/
 - **Level-0 mode**: no Python? Everything still works with markdown-only
   indexing and the agent's own web tools.
 
+## Local by default, cloud optional
+
+Your library can live on your machine, or in a cloud agent session.
+
+| | Cloud | Local |
+|---|---|---|
+| Build the library, design it, write its docs | ✅ strong | ✅ |
+| Ask it things, curate, reach it from anywhere | ✅ runs with your PC off | needs your machine on |
+| **Actually collecting from the web** | ⚠️ limited by an egress allowlist — many sources can't be allowed at all | ✅ no such limit |
+
+**Start local for your first library.** There's no egress policy in the way,
+collection genuinely works, and you finish the whole loop in one sitting. Choose
+cloud when you need it running with your PC off, want it reachable from anywhere,
+or won't install Python. **Best of both — the hybrid: build and curate in the
+cloud, run the collector locally.**
+
+The cloud path has one step this toolkit otherwise assumes away — configuring the
+egress allowlist — plus a few realities about where the library lives and which
+branches an agent may push. All of it: `references/cloud.md`.
+
 ## How is this different from other second-brain skills?
 
 Excellent projects exist for AI-assisted note vaults (notably
@@ -72,16 +92,20 @@ Details and per-platform caveats: `docs/compatibility.md`.
 
 ## Status
 
-**v0.1.1 — pre-1.0.** Content-complete and end-to-end validated on **three
-independent ecosystems** — Claude Code, WorkBuddy / CodeBuddy (Zhipu/GLM), and
-Codex (GPT-class) — each a fresh agent that built a working library from just this
-repo + a topic, unaided, in Level-0 *and* full-SQLite modes. Those runs surfaced
-refinements now folded in (0.1.1): robust Python detection (Store / sandbox alias
-traps), a hardened prompt-injection red line, numeric-honesty rules, Level-0
-run-logs, a Level-0 write carve-out, data-type watchlist-scoping, and auto-append
-of raw data rows. **Still pre-1.0** — hardening continues before the 1.0 tag.
-Methodology distilled from three production libraries that ran for months with
-daily automation and independent QC.
+**v0.1.2 — pre-1.0.** Content-complete and end-to-end validated on **four
+independent ecosystems** — Claude Code (local), WorkBuddy / CodeBuddy (Zhipu/GLM),
+Codex (GPT-class), and **Claude Code in the cloud** — each a fresh agent that built
+a working library from just this repo + a topic, unaided, in Level-0 *and*
+full-SQLite modes. Those runs surfaced refinements now folded in: robust Python
+detection (Store / sandbox alias traps), a hardened prompt-injection red line,
+numeric-honesty rules, Level-0 run-logs, a Level-0 write carve-out, data-type
+watchlist-scoping, and auto-append of raw data rows (0.1.1) — and, from the cloud
+run, the **local-vs-cloud split**: an optional cloud path with its mandatory
+egress-allowlist step, and rule 6 extended to cover policy denials (0.1.2). The
+0.1.1 fixes were independently re-validated by the cloud build, which read them
+and applied all three unprompted. **Still pre-1.0** — hardening continues before
+the 1.0 tag. Methodology distilled from three production libraries that ran for
+months with daily automation and independent QC.
 
 ## License
 
