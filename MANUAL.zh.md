@@ -29,7 +29,7 @@
 | 助手 | 你需要知道的 |
 |---|---|
 | **Claude Code** ⭐ 首次推荐 | 有 **Windows / Mac 桌面应用**,像装普通软件一样装。用你的 **Claude 订阅**(Pro / Max)登录 —— **就是你已经在付的那个账号,不用再买**。 https://claude.com/claude-code |
-| **Codex**(OpenAI) | ⚠️ **没有单独的「Codex」程序可下载**。Codex 是 **ChatGPT 桌面版 App 里的一个模式**。装 ChatGPT 桌面版 → 登录 → 打开文件夹 → 选 Codex 模式。**有 ChatGPT Plus 就已经有 Codex 了,不用另买。** 下载:https://chatgpt.com/download/ (最低确认可用档:**Plus**;Free / Go 能否跑本地任务厂商未明说,不建议) |
+| **Codex**(OpenAI) | ⚠️ **没有单独的「Codex」桌面程序可下载**。Codex 是 **ChatGPT 桌面版 App 里的一个模式**。装 ChatGPT 桌面版 → 登录 → 打开文件夹 → 选 Codex 模式。**有 ChatGPT Plus 就已经有 Codex 了,不用另买。** 下载:https://chatgpt.com/download/ (最低确认可用档:**Plus**;Free / Go 能否跑本地任务厂商未明说,不建议) |
 | **WorkBuddy** | 已经在用的话,直接用它就行。 |
 
 ### ⚠️ 这些**不行** —— 但请看清区别

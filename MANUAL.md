@@ -29,7 +29,7 @@ The AI assistant that drives this toolkit needs a paid account. **If you already
 | Assistant | What you need to know |
 |---|---|
 | **Claude Code** ⭐ recommended for first-timers | Has a **Windows / Mac desktop app** — install it like any normal program. Sign in with your **Claude subscription** (Pro / Max) — **the account you're already paying for; nothing extra to buy.** https://claude.com/claude-code |
-| **Codex** (OpenAI) | ⚠️ **There's no separate "Codex" program to download.** Codex is a **mode inside the ChatGPT desktop app**. Install the ChatGPT desktop app → sign in → open a folder → pick Codex mode. **If you have ChatGPT Plus, you already have Codex — nothing extra to buy.** Download: https://chatgpt.com/download/ (lowest confirmed tier: **Plus**; the vendor doesn't state whether Free / Go can run local tasks, so don't count on them) |
+| **Codex** (OpenAI) | ⚠️ **There's no separate "Codex" desktop program to download.** Codex is a **mode inside the ChatGPT desktop app**. Install the ChatGPT desktop app → sign in → open a folder → pick Codex mode. **If you have ChatGPT Plus, you already have Codex — nothing extra to buy.** Download: https://chatgpt.com/download/ (lowest confirmed tier: **Plus**; the vendor doesn't state whether Free / Go can run local tasks, so don't count on them) |
 | **WorkBuddy** | If you already use it, just use it. |
 
 ### ⚠️ These **won't** work — but note the distinction
