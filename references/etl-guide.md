@@ -67,8 +67,8 @@ data library specifically:
    beat hiding.)
 5. **The empty/failed distinction is schema, not prose** (see
    `pipeline-discipline.md`): a fetch log with a `status` column
-   (ok / empty / gap / failed) so "this series has no data" can never be confused
-   with "the fetch failed."
+   (ok / empty / gap / failed / blocked) so "this series has no data" can never be
+   confused with "the fetch failed" — or with "our egress policy refused to go there."
 
 ## Raw observations auto-append; only analysis is curated
 
@@ -91,11 +91,13 @@ facts every round; curate the conclusions.**
 - **Window your backfill** — page or date-window the initial load (month by month,
   say) so one request can't time out on a huge response, and a failure costs one
   window, not the whole history. Each window is idempotent, so a failed one retries.
-- **Classify every fetch four ways** (ok / empty / gap / failed) and remember:
-  **429 and 5xx are transient (retry next round); 4xx-except-429 is permanent (fix
-  the config); a failed fetch is NOT an empty result.** A production library once
-  reported a whole series as "empty" for weeks because one HTTP 504 was misread as
-  emptiness.
+- **Classify every fetch five ways** (ok / empty / gap / failed / blocked) and
+  remember: **429 and 5xx are transient (retry next round); 4xx-except-403/407/408/429
+  is permanent (fix the config); 403/407 and proxy tunnel refusals are `blocked`
+  (allowlist the domain, or collect locally — retrying never helps); and a failed
+  fetch is NOT an empty result.** A production library once reported a whole series
+  as "empty" for weeks because one HTTP 504 was misread as emptiness; a cloud round
+  lost 7 of 8 sources to policy denials it had labelled "gap".
 - **Idempotent catch-up** — rebuild the work list from *state* (what's still
   missing), not from this run's catch, so an interrupted backfill resumes cleanly.
 

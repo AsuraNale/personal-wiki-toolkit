@@ -16,7 +16,7 @@ sources or change thresholds without the owner approving a plan.
 - `notes/` — Gold notes (curated, cited). `briefs/` — finalized briefs.
 - `_pipeline/silver/` — machine-drafted briefs awaiting your curation.
 - `intel.db`: `seen` (Bronze ledger), `silver` (judged keepers), `fetch_log`
-  (ok/empty/gap/failed per source), `demand` (out-of-library query log).
+  (ok/empty/gap/failed/blocked per source), `demand` (out-of-library query log).
 - `kb.db`: `notes` index (path/title/tags/links).
 - Topics tracked: grinders, machines, technique, beans (see `config.json`).
 

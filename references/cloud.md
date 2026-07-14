@@ -30,6 +30,13 @@ Cloud sandboxes route outbound traffic through a proxy with a domain allowlist.
 a site error.** This is environment policy, not anti-bot defence: the source is
 fine; your sandbox refused to go there.
 
+The pipeline records these as **`blocked`** — a state of its own, deliberately
+separate from `gap` ("nothing there / fix your config") and `failed` ("transient,
+retry"), because a policy denial needs a third fix entirely: allow the domain, or
+collect locally. Note the denial can arrive at two layers — an HTTP 403, or a
+proxy refusing the https CONNECT (surfacing as `Tunnel connection failed: 403`).
+Both are `blocked`. See `pipeline-discipline.md` §1.
+
 Evidence (two independent cloud builds, same week):
 - an ETL library: 3 retail sources → policy-denied;
 - an intel library: **7 of 8 sources (all Hacker News, all arXiv) died** — the run
@@ -101,9 +108,22 @@ State plainly:
 
 A policy denial is a fact to report, not an obstacle to defeat. **Never** evade it
 — no alternate proxies, no mirror scraping, no "creative" routing. Record the
-denial (rule 6: it is a failure, never "nothing new"), tell the user which domains
+denial (it lands in `blocked`, never "nothing new"), tell the user which domains
 were refused and what to allow, and continue with what you honestly have.
 
 If nothing survived, say the round collected nothing, and why. **A library built
 from the one source that happened to be allowed, presented as a normal round, is a
 lie of omission.**
+
+**The honest fallback when collection is blocked:** find items with your own web
+tools and register each one with
+
+```
+python3 scripts/pipeline.py add <url> --title "…" --source "<where you found it>" [--topic …]
+```
+
+It enters Bronze, joins the dedup ledger, and appears in `pending.json` for normal
+judging — with its provenance permanently recorded as `manual:<source>`, so a
+hand-found item never masquerades as an automatic fetch. **Do not hand-write the
+SQLite files** to work around a blocked round (rule 1); that is what this command
+is for.

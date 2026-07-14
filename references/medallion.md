@@ -35,12 +35,16 @@ not about how interesting it looked.
    low or the judging has gone soft — check against `qc-rubric.md`.
 5. **Tiers are per-item, never per-source.** A great source still emits
    noise; a mediocre source occasionally emits gold. Judge items.
-6. **The empty/failed distinction.** An item can be absent from Bronze for
-   two very different reasons: the source genuinely had nothing (fine), or
-   the fetch failed (must be retried). The ledger and logs must distinguish
-   these states; conflating them once caused a production library to
-   confidently report a data series as "empty" for weeks when the fetch was
-   just erroring. Details: `pipeline-discipline.md`.
+6. **The empty/failed/blocked distinction.** An item can be absent from Bronze
+   for very different reasons: the source genuinely had nothing (fine), the
+   fetch failed (retry it), the config points somewhere wrong (`gap` — fix it),
+   or an egress policy refused the request (`blocked` — allow the domain, or
+   collect locally; retrying is useless). The ledger and logs must distinguish
+   these states, because each implies a different fix. Conflating them once made
+   a production library confidently report a data series as "empty" for weeks
+   when the fetch was just erroring — and made a cloud round file 7 of 8
+   policy-denied sources as "gap", advice that could never work.
+   Details: `pipeline-discipline.md`.
 
 ## Silver is a queue, not a resting place
 

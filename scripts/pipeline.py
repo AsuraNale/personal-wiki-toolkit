@@ -218,12 +218,13 @@ def write_pending(root, config, conn):
 def cmd_fetch(root, config):
     conn = connect(root)
     results = fetch_rss.fetch_all(config)
-    fresh, ok_s, empty_s, gap_s, fail_s = 0, 0, 0, 0, 0
+    fresh, ok_s, empty_s, gap_s, fail_s, blocked_s = 0, 0, 0, 0, 0, 0
     for r in results:
         conn.execute("INSERT INTO fetch_log (ts, source, kind, status, items, detail) "
                      "VALUES (?,?,?,?,?,?)",
                      (now_ts(), r["name"], r["kind"], r["status"], len(r["items"]), r["detail"]))
-        tag = {"ok": "OK", "empty": "EMPTY", "gap": "GAP", "failed": "FETCH-FAIL"}[r["status"]]
+        tag = {"ok": "OK", "empty": "EMPTY", "gap": "GAP", "failed": "FETCH-FAIL",
+               "blocked": "BLOCKED"}.get(r["status"], r["status"].upper())
         log(root, config, "%-10s source=%s kind=%s items=%d%s"
             % (tag, r["name"], r["kind"], len(r["items"]),
                (" - " + r["detail"]) if r["detail"] else ""))
@@ -233,6 +234,8 @@ def cmd_fetch(root, config):
             empty_s += 1
         elif r["status"] == "gap":
             gap_s += 1
+        elif r["status"] == "blocked":
+            blocked_s += 1
         else:
             fail_s += 1
         for it in r["items"]:
@@ -246,12 +249,55 @@ def cmd_fetch(root, config):
     n_pending = write_pending(root, config, conn)
     conn.close()
     log(root, config, "fetch: %d new candidates (deduped); %d awaiting judgment in pending.json "
-        "[sources: %d ok / %d empty / %d gap / %d failed]"
-        % (fresh, n_pending, ok_s, empty_s, gap_s, fail_s))
+        "[sources: %d ok / %d empty / %d gap / %d failed / %d blocked]"
+        % (fresh, n_pending, ok_s, empty_s, gap_s, fail_s, blocked_s))
     if fail_s:
         log(root, config, "note: %d source(s) FAILED transiently — their items were NOT "
             "fetched; they will be retried next round (a failed fetch is not an empty result)"
             % fail_s)
+    if blocked_s:
+        log(root, config, "note: %d source(s) BLOCKED by policy — retrying will NOT help. Allow "
+            "their domains in the egress allowlist, or run collection locally. (A blocked fetch "
+            "is not an empty result — see references/cloud.md)" % blocked_s)
+    return 0
+
+
+# ---------------------------------------------------------------- add (manual Bronze entry)
+
+
+def cmd_add(root, config, args):
+    """Register a manually-found item into Bronze.
+
+    The collection flow tells you to fill gaps by hand (web search) when the pipeline
+    cannot reach a source — but without this command your only options were to hand-write
+    SQLite (violating rule 1) or leave the find dangling, unrecorded and undeduped. A
+    production cloud round kept the red line and lost three good items proving it.
+
+    Provenance is explicit and permanent: the row's source is stored as 'manual:<source>',
+    so a hand-registered item can never masquerade as an automatic fetch in the ledger.
+    Once added it is ordinary Bronze: it appears in pending.json and you judge it as usual.
+    """
+    url = (args.url or "").strip()
+    if not url.startswith(("http://", "https://")):
+        print("add: url must be http(s) - got %r" % url)
+        return 2
+    prov = "manual:%s" % ((args.source or "").strip() or "unspecified")
+    conn = connect(root)
+    cur = conn.execute(
+        "INSERT OR IGNORE INTO seen (url, title, source, topic, summary, date, first_seen) "
+        "VALUES (?,?,?,?,?,?,?)",
+        (url, (args.title or "").strip(), prov, args.topic,
+         (args.summary or "").strip(), (args.date or "").strip(), today()))
+    added = cur.rowcount  # 0 => url already in the ledger (layer-1 dedup)
+    conn.commit()
+    n_pending = write_pending(root, config, conn)
+    conn.close()
+    if added:
+        log(root, config, "MANUAL-ADD url=%s source=%s topic=%s" % (url, prov, args.topic or "-"))
+        print("added to Bronze as '%s' (provenance recorded); %d item(s) awaiting judgment in "
+              "pending.json - judge them, then run: pipeline.py apply" % (prov, n_pending))
+    else:
+        print("already in the ledger (deduped) - nothing added; %d awaiting judgment" % n_pending)
     return 0
 
 
@@ -260,20 +306,31 @@ def cmd_fetch(root, config):
 
 def source_health(conn):
     """One-line source-health banner from the latest fetch status per source.
-    A failed/gap fetch must never be silently read as 'a quiet day' — the banner
-    flags ANY gap or failed (gap = permanent e.g. an HN 400; failed = transient),
-    so a short or empty brief is honestly attributed."""
+    A failed/gap/blocked fetch must never be silently read as 'a quiet day'. The three bad
+    states each need a DIFFERENT fix, so the banner keeps them apart:
+      gap     = the source really has nothing, or the config is wrong -> fix config
+      failed  = transient (timeout / 429 / 5xx)                       -> retry next round
+      blocked = refused by an egress/proxy policy                     -> allowlist it, or collect locally
+    Lumping blocked in with failed would tell the user to retry — which never helps."""
     rows = conn.execute(
         "SELECT source, status FROM fetch_log f "
         "WHERE ts = (SELECT MAX(ts) FROM fetch_log WHERE source = f.source)").fetchall()
     if not rows:
         return "source health: no fetch on record yet"
     per = {s: st for s, st in rows}
+    blocked = sorted(s for s, st in per.items() if st == "blocked")
     bad = {s: st for s, st in per.items() if st in ("gap", "failed")}
+    parts = []
+    if blocked:
+        parts.append("%d/%d sources BLOCKED by policy (%s) - retrying will NOT help: allow those "
+                     "domains in your egress allowlist, or run collection locally"
+                     % (len(blocked), len(per), ", ".join(blocked)))
     if bad:
-        return ("WARNING source health: %d/%d sources failed to fetch (%s) - this is a FETCH "
-                "problem, not 'no news'; retry / check config" %
-                (len(bad), len(per), ", ".join("%s=%s" % (s, st) for s, st in sorted(bad.items()))))
+        parts.append("%d/%d sources failed to fetch (%s) - this is a FETCH problem, not 'no news'; "
+                     "retry / check config"
+                     % (len(bad), len(per), ", ".join("%s=%s" % (s, st) for s, st in sorted(bad.items()))))
+    if parts:
+        return "WARNING source health: " + " | ".join(parts)
     return ("source health: all %d sources ok (%s) - a short brief today is a genuinely quiet "
             "day, not a fetch failure" % (len(per), ", ".join(sorted(per))))
 
@@ -601,6 +658,16 @@ def main(argv=None):
                     "(pending.json -> judgments.json interface).")
     sub = ap.add_subparsers(dest="cmd")
     sub.add_parser("fetch", help="fetch all sources, dedup, update Bronze, write pending.json")
+    p = sub.add_parser("add", help="register a manually-found item into Bronze "
+                                   "(provenance kept as manual:<source>)")
+    p.add_argument("url")
+    p.add_argument("--title", required=True, help="the item's title")
+    p.add_argument("--source", required=True,
+                   help="where you found it (outlet/site); stored as 'manual:<source>' so a "
+                        "hand-added row never looks like an automatic fetch")
+    p.add_argument("--topic", help="topic label, as a judging hint")
+    p.add_argument("--summary", default="", help="one-line gist (optional)")
+    p.add_argument("--date", default="", help="publication date, YYYY-MM-DD (optional)")
     sub.add_parser("apply", help="apply _pipeline/judgments.json -> Silver + draft brief (idempotent)")
     p = sub.add_parser("promote", help="mark a Silver item promoted to Gold")
     p.add_argument("url")
@@ -622,6 +689,8 @@ def main(argv=None):
     config = load_config(root)
     if args.cmd == "fetch":
         return cmd_fetch(root, config)
+    if args.cmd == "add":
+        return cmd_add(root, config, args)
     if args.cmd == "apply":
         return cmd_apply(root, config)
     if args.cmd == "promote":

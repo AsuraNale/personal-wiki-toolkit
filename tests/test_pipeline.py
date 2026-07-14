@@ -104,7 +104,7 @@ def test_feed_parsing():
 
 
 def test_status_classification():
-    print("== GAP vs FETCH-FAIL classification ==")
+    print("== GAP vs FETCH-FAIL vs BLOCKED classification ==")
     real = urllib.request.urlopen
 
     def make(code):
@@ -112,10 +112,35 @@ def test_status_classification():
             raise urllib.error.HTTPError("http://x", code, "x", {}, None)
         return _uo
     try:
-        for code, want in ((404, "gap"), (403, "gap"), (503, "failed"), (429, "failed"), (408, "failed")):
+        # 403/407 = refused by policy/proxy/anti-bot -> blocked. NOT gap: a refusal is no
+        # evidence the source is empty, and "fix your config URL" is the wrong advice.
+        for code, want in ((404, "gap"), (403, "blocked"), (407, "blocked"),
+                           (503, "failed"), (429, "failed"), (408, "failed")):
             urllib.request.urlopen = make(code)
             r = fetch_rss.fetch_source({"kind": "rss", "name": "s", "url": "http://x/%d" % code})
             check("HTTP %d -> status=%s" % (code, want), r["status"] == want, r)
+
+        urllib.request.urlopen = make(403)
+        d = fetch_rss.fetch_source({"kind": "rss", "name": "s", "url": "http://x/403"})["detail"]
+        check("403 detail does not assert a cause + points at the allowlist first",
+              "allowlist" in d.lower() and "not help" in d.lower(), d)
+        check("403 detail denies it is evidence of emptiness", "NOT evidence" in d, d)
+
+        # The key inconsistency: an https CONNECT refused by a sandbox proxy surfaces as an
+        # OSError, not an HTTPError. Production saw one identical policy denial land in two
+        # states (arxiv -> gap, Hacker News -> failed). Both must now be blocked.
+        def _tunnel(req, timeout=None):
+            raise OSError("Tunnel connection failed: 403 Forbidden")
+        urllib.request.urlopen = _tunnel
+        r = fetch_rss.fetch_source({"kind": "rss", "name": "s", "url": "https://x/t"})
+        check("proxy CONNECT refusal (connection layer) -> blocked, not failed",
+              r["status"] == "blocked", r)
+
+        def _deny(req, timeout=None):
+            raise OSError("host_not_allowed")
+        urllib.request.urlopen = _deny
+        check("egress deny-reason (host_not_allowed) -> blocked",
+              fetch_rss.fetch_source({"kind": "rss", "name": "s", "url": "https://x/d"})["status"] == "blocked")
 
         def _to(req, timeout=None):
             raise TimeoutError("timed out")
@@ -169,6 +194,19 @@ def test_source_health_banner():
     mock_results(R("a", "ok", [I("https://u/2", "T2")]), R("b", "gap", detail="HTTP 400"))
     pipeline.cmd_fetch(root, cfg)
     check("gap!=0 also warns (HN 400 lands in gap bucket)", "WARNING" in pipeline.source_health(conn))
+
+    # blocked must be called out SEPARATELY from failed: the fixes differ (allowlist vs retry).
+    mock_results(R("a", "ok", [I("https://u/9", "T9")]), R("b", "blocked", detail="HTTP 403 refused"))
+    check("fetch survives a blocked source (no KeyError on the status tag)",
+          pipeline.cmd_fetch(root, cfg) == 0)
+    ban = pipeline.source_health(conn)
+    check("blocked source -> banner says BLOCKED and names it", "BLOCKED by policy" in ban and "b" in ban, ban)
+    check("blocked banner gives the right action (allowlist), not 'retry'",
+          "allowlist" in ban and "NOT help" in ban, ban)
+    check("blocked is not lumped into the failed sentence",
+          "b=failed" not in ban and "b=blocked" not in ban, ban)
+    check("fetch_log records status=blocked", conn.execute(
+        "SELECT COUNT(*) FROM fetch_log WHERE source='b' AND status='blocked'").fetchone()[0] == 1)
     mock_results(R("a", "ok", [I("https://u/3", "T3")]), R("b", "empty"))
     pipeline.cmd_fetch(root, cfg)
     check("all ok/empty -> quiet-day banner (no warning)", "all 2 sources ok" in pipeline.source_health(conn))
@@ -327,12 +365,59 @@ def test_index():
     check("coverage --json + orphan detected", cov["total_notes"] == 4 and any("orphan.md" in o["path"] for o in cov["orphans"]) and not any("alpha.md" in o["path"] for o in cov["orphans"]))
 
 
+# ---------------------------------------------------------------- manual add (provenance)
+
+
+def test_manual_add():
+    print("== pipeline.py add: manual Bronze entry, provenance kept ==")
+    cfg = fresh_sandbox()
+    root = SANDBOX
+    os.chdir(root)
+
+    class A:  # stand-in for the argparse namespace
+        url = "https://example.com/found-by-hand"
+        title = "Found by hand"
+        source = "techcrunch"
+        topic = "t"
+        summary = "gist"
+        date = "2026-07-14"
+
+    check("add exit 0", pipeline.cmd_add(root, cfg, A) == 0)
+    conn = sqlite3.connect(str(root / "intel.db"))
+    row = conn.execute("SELECT source, status FROM seen WHERE url=?", (A.url,)).fetchone()
+    check("lands in Bronze tagged manual:<source> (never masquerades as an auto fetch)",
+          row is not None and row[0] == "manual:techcrunch", row)
+    check("manual row is ordinary unjudged Bronze (status=new)", row[1] == "new")
+    pend = json.loads((root / "_pipeline/pending.json").read_text(encoding="utf-8"))
+    check("manual item surfaces in pending.json for judging",
+          any(i["url"] == A.url for i in pend["items"]))
+    check("re-add exit 0", pipeline.cmd_add(root, cfg, A) == 0)
+    check("re-adding the same url is deduped by the ledger", conn.execute(
+        "SELECT COUNT(*) FROM seen WHERE url=?", (A.url,)).fetchone()[0] == 1)
+
+    class B:
+        url = "notaurl"
+        title, source, topic, summary, date = "x", "y", None, "", ""
+
+    check("non-http url refused (exit 2)", pipeline.cmd_add(root, cfg, B) == 2)
+
+    class C:
+        url = "https://example.com/no-source-given"
+        title, source, topic, summary, date = "t", "", None, "", ""
+
+    pipeline.cmd_add(root, cfg, C)
+    check("missing source still records provenance as manual:unspecified", conn.execute(
+        "SELECT source FROM seen WHERE url=?", (C.url,)).fetchone()[0] == "manual:unspecified")
+    conn.close()
+
+
 def main():
     try:
         test_feed_parsing()
         test_status_classification()
         test_hn_client_side_filter()
         test_source_health_banner()
+        test_manual_add()
         test_pipeline_flow()
         test_dismissed_status_one_way()
         test_draft_day_window()

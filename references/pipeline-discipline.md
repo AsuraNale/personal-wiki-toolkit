@@ -12,23 +12,47 @@ The most dangerous bug in a collection pipeline is silent: a source errors, the
 code treats "I got nothing" as "there was nothing," and a whole topic quietly
 stops updating while the library looks healthy.
 
-Classify every fetch into **four** outcomes, never two:
+Classify every fetch into **five** outcomes, never two:
 
 | Outcome | Meaning | What it is NOT |
 |---|---|---|
 | `ok` | fetched, parsed, ≥1 item | — |
 | `empty` | fetched fine, zero items — the source genuinely had nothing | not a failure |
-| `gap` | permanent-looking: HTTP 4xx (except 408/429), unparseable feed, wrong URL | not transient — blind retry won't fix it; fix the config |
+| `gap` | permanent-looking: HTTP 4xx (except 403/407/408/429), unparseable feed, wrong URL | not transient — blind retry won't fix it; fix the config |
 | `failed` | transient: HTTP 5xx, 408/429 rate-limit, timeout, connection reset | **not empty** — the items exist, we just didn't get them; retry next round |
+| `blocked` | refused by policy: HTTP 403/407, or a proxy refusing the connection/tunnel | **neither** "the source is empty" **nor** "your config is wrong" — retrying never helps; allow the domain, or collect locally |
 
 A production library once reported a data series as "empty" for weeks because a
 single HTTP 504 (a transient `failed`) was misread as emptiness. The fix wasn't
-cleverer code — it was refusing to collapse four states into two.
+cleverer code — it was refusing to collapse five states into two.
+
+**Each state exists because it needs a DIFFERENT fix.** That is the whole point:
+`gap` → fix the config · `failed` → retry next round · `blocked` → allowlist the
+domain, or move collection local. Merge any two and you hand the user an action
+that cannot work.
 
 **429 and 408 are `failed`, not `gap`.** They're rate-limiting / request-timeout
 — transient. arXiv in particular returns 429 readily (it asks for ≥3s between
 requests); mislabeling that as a permanent `gap` tells the user to "fix their
 config" when all they need is the next round.
+
+**403/407 are `blocked`, not `gap`.** A refusal is no evidence the source is
+empty, and "check your config URL" is the wrong advice when the real problem is
+an egress allowlist. Two things make this worth its own state:
+- **It is the dominant failure mode in the cloud.** One production cloud round
+  lost **7 of 8 sources** to policy denials and still "succeeded" — only the
+  health banner revealed the brief had been built from the one source that
+  happened to be allowed.
+- **The same denial can arrive at two layers.** An HTTP 403 surfaces as an
+  HTTPError; a proxy refusing an https CONNECT surfaces as an `OSError`
+  ("Tunnel connection failed: 403 Forbidden") instead. In that same round one
+  identical cause landed in two different states (`gap` for arXiv, `failed` for
+  Hacker News) until both were routed to `blocked`. **Classify at both layers**,
+  or the inconsistency survives.
+
+And a refusal is **ambiguous** (egress policy / anti-bot / auth required), so
+never assert the cause — report the troubleshooting priority: in a cloud or
+sandbox environment, check the allowlist first. Details: `cloud.md`.
 
 ## 2. Idempotency and catch-up by construction
 
@@ -88,7 +112,7 @@ column gets enforced.
 
 **Level-0 (no DB):** the health record is a Markdown run-log instead —
 `_pipeline/logs/YYYY-MM-DD.md` per round, listing each source's outcome
-(ok / empty / gap / failed) and counts. Same purpose: so "nothing new" is always
+(ok / empty / gap / failed / blocked) and counts. Same purpose: so "nothing new" is always
 distinguishable from "the fetch didn't run," and what was actually fetched stays
 separable from what the agent merely asserts it fetched.
 

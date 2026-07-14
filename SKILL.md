@@ -111,8 +111,10 @@ SKILL.md because they must never be skipped:
    needed). Database writes, fetching, and indexing are the scripts' job. You
    exchange data via JSON files (`_pipeline/pending.json` in,
    `_pipeline/judgments.json` out). **Never write to the SQLite files
-   directly** — always go through `scripts/pipeline.py apply` or
-   `scripts/index_db.py`. This keeps the schema safe on every platform.
+   directly** — always go through `scripts/pipeline.py` (`apply`; or `add` to
+   register an item *you* found by hand, which keeps its provenance as
+   `manual:<source>`) or `scripts/index_db.py`. This keeps the schema safe on
+   every platform — and means keeping the rule never costs you a find.
    **Level-0 exception:** with no scripts, you maintain `index.md` and
    `_pipeline/seen.md` by hand — the rule's intent (never corrupt a SQLite
    schema) is moot when there is none. Still append, never rewrite; keep every
@@ -140,16 +142,21 @@ SKILL.md because they must never be skipped:
    that permit it. No paywalls, no scraping against terms of service, no
    credentials the user didn't hand you, and no storing full article text —
    store title + link + summary + your judgment.
-6. **A failed fetch is not an empty result — and neither is a blocked one.** If
-   a source errors, times out, or is **refused by an egress policy** (a cloud
-   sandbox proxy returning 403 because the domain isn't allowlisted), record it
-   as a failure to retry — never conclude "nothing new" from a fetch that never
-   happened. (A production library mislabeled a whole ticker "has no data"
-   because one HTTP 504 was misread as emptiness; a cloud run lost 7 of 8
-   sources to policy denials and only its health banner caught it.) **When a
-   policy blocks you, report it — never route around it:** no alternate
-   proxies, no mirror scraping. Name the refused domains and what to allow, and
-   say what the round honestly collected. Details: `references/cloud.md`.
+6. **A failed fetch is not an empty result — and neither is a blocked one.**
+   Never conclude "nothing new" from a fetch that never happened. The three bad
+   outcomes need three *different* fixes, so never merge them: **`gap`** (the
+   source really has nothing, or your config is wrong → fix the config);
+   **`failed`** (transient — timeout / 429 / 5xx → retry next round);
+   **`blocked`** (refused by an egress/proxy policy → allow the domain, or move
+   collection local — **retrying never helps**). (A production library
+   mislabeled a whole ticker "has no data" because one HTTP 504 was misread as
+   emptiness; a cloud run lost 7 of 8 sources to policy denials, and had them
+   filed as "gap" — i.e. told to fix a config that was already correct.) A
+   refusal is **ambiguous** (policy / anti-bot / auth), so don't assert a cause —
+   in a cloud sandbox, check the allowlist first. **And when a policy blocks you,
+   report it — never route around it:** no alternate proxies, no mirror scraping.
+   Name the refused domains and what to allow, and say what the round honestly
+   collected. Details: `references/pipeline-discipline.md`, `references/cloud.md`.
 7. **Finish the loop.** Setup is not done when files exist. It is done when
    the first collection ran, YOU judged the results, the first brief exists,
    and the user has performed one promote and one dismiss with their own

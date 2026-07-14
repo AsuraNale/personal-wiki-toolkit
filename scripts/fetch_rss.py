@@ -61,11 +61,43 @@ class FetchFailed(Exception):
     """Transient fetch problem (5xx, timeout, network). Retry next round."""
 
 
+class FetchBlocked(Exception):
+    """Refused by a policy/egress allowlist, not by the source. Neither 'fix your config'
+    nor 'retry later' helps: allow the domain, or run collection locally."""
+
+
+# A refusal is ambiguous — never assert the cause; give the troubleshooting priority instead.
+_BLOCKED_HINT = (
+    "HTTP %d refused. If you are in a cloud/sandbox environment, check the egress allowlist "
+    "FIRST (most common cause); it may also be the site blocking bots, or requiring auth. "
+    "This is NOT evidence the source has no content, and retrying will not help."
+)
+
+# Egress refusals often surface BELOW HTTP: an https CONNECT refused by a sandbox proxy raises
+# OSError("Tunnel connection failed: 403 Forbidden"), not an HTTPError. Without these signatures
+# the same policy denial lands in two different states depending on the URL scheme — exactly the
+# inconsistency seen in production (arxiv -> gap, Hacker News -> failed, one identical cause).
+_BLOCK_SIGNATURES = (
+    "tunnel connection failed",   # http.client: proxy refused the CONNECT (answered 403/407)
+    "host_not_allowed",           # sandbox egress proxy deny reason
+    "proxy authentication",       # 407 surfaced at the connection layer
+    "forbidden by proxy",
+    "blocked by policy",
+)
+
+
+def _looks_blocked(text):
+    """True if a connection-layer error smells like a proxy/egress refusal."""
+    t = (text or "").lower()
+    return any(sig in t for sig in _BLOCK_SIGNATURES)
+
+
 # ---------------------------------------------------------------- HTTP
 
 
 def _http_get(url):
-    """GET url, classifying errors into FetchGap (permanent) vs FetchFailed (transient)."""
+    """GET url, classifying errors into FetchBlocked (policy refusal), FetchGap (permanent)
+    or FetchFailed (transient). The three need three different fixes — keep them apart."""
     req = urllib.request.Request(url, headers={"User-Agent": USER_AGENT})
     try:
         with urllib.request.urlopen(req, timeout=TIMEOUT) as resp:
@@ -74,11 +106,19 @@ def _http_get(url):
         if e.code in (408, 429):  # request timeout / rate limit = transient, retry next round
             ra = e.headers.get("Retry-After") if getattr(e, "headers", None) else None
             raise FetchFailed("HTTP %d%s" % (e.code, (" (Retry-After: %s)" % ra) if ra else ""))
+        if e.code in (403, 407):  # refused — policy/proxy/anti-bot/auth; NOT "no content here"
+            raise FetchBlocked(_BLOCKED_HINT % e.code)
         if 400 <= e.code < 500:  # other 4xx = permanent (bad URL/query) — fixing config is required
             raise FetchGap("HTTP %d (check the source URL/query in config.json)" % e.code)
         raise FetchFailed("HTTP %d" % e.code)
-    except Exception as e:  # URLError, timeout, ConnectionReset, ...
-        raise FetchFailed("%s: %s" % (type(e).__name__, str(e)[:120]))
+    except Exception as e:  # URLError, timeout, ConnectionReset, proxy CONNECT refusal, ...
+        text = str(e)
+        if _looks_blocked(text):
+            raise FetchBlocked(
+                "refused at the connection/tunnel layer (%s: %s) - this looks like an egress/proxy "
+                "policy, not the source. Check the allowlist FIRST. NOT evidence the source has no "
+                "content, and retrying will not help." % (type(e).__name__, text[:100]))
+        raise FetchFailed("%s: %s" % (type(e).__name__, text[:120]))
 
 
 # ---------------------------------------------------------------- text helpers
@@ -235,7 +275,7 @@ _DISPATCH = {"rss": fetch_rss_source, "arxiv": fetch_arxiv, "hn": fetch_hn}
 def fetch_source(src):
     """Fetch one config source. Never raises; returns a result dict:
 
-        {"name", "kind", "status": ok|empty|gap|failed, "detail", "items": [...]}
+        {"name", "kind", "status": ok|empty|gap|failed|blocked, "detail", "items": [...]}
 
     Items carry the source's optional "topic" label as a judging hint.
     """
@@ -248,6 +288,9 @@ def fetch_source(src):
         return result
     try:
         items = _DISPATCH[kind](src)
+    except FetchBlocked as e:
+        result["status"], result["detail"] = "blocked", str(e)
+        return result
     except FetchGap as e:
         result["status"], result["detail"] = "gap", str(e)
         return result

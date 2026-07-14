@@ -96,7 +96,7 @@ CREATE TABLE fetch_log (
     ts     TEXT,
     source TEXT,
     kind   TEXT,                    -- rss | arxiv | hn
-    status TEXT,                    -- ok | empty | gap | failed  <- the four-way distinction
+    status TEXT,                    -- ok | empty | gap | failed | blocked  <- the five-way distinction
     items  INTEGER,
     detail TEXT                     -- e.g. "HTTP 503" / "HTTP 404 (check the URL...)"
 );
