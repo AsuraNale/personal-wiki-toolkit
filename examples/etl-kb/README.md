@@ -19,8 +19,9 @@ What to look at:
   `etl-guide.md` in ~90 lines of stdlib: **idempotent PK** (USGS event id →
   `INSERT OR IGNORE`), **audit columns** (`source`, `fetched_at`), a **reliability
   flag** (`mag_reliable = 0` when magnitude is missing — the row is kept and
-  flagged, not dropped), and the **4-way fetch status** (ok / empty / gap / failed
-  — a failed fetch is never recorded as "empty").
+  flagged, not dropped), and the **5-way fetch status** (ok / empty / gap / failed /
+  blocked — a failed fetch is never recorded as "empty", and a policy refusal is
+  neither "empty" nor "fix your config": allowlist the domain, or fetch locally).
 - `keeper.md` — the keeper's role with the **data preset**: answers cite source +
   snapshot + definition, state blind spots, never compute from memory.
 - `CLAUDE.md` — the library's agent-memory.

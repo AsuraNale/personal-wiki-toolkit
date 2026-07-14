@@ -8,6 +8,9 @@
 agent 角色、以及 QC 质检标准。跨 **Claude Code / OpenClaw / WorkBuddy / Codex**(其实任何
 能读 markdown、跑脚本的 agent 都行)。
 
+📖 **不懂编程?先看[说明书](MANUAL.zh.md)** —— 人话版、零代码、带一个完整实例(装机价格追踪)、
+本地 vs 云端的诚实对比、以及故障排查。English manual: [MANUAL.md](MANUAL.md)。
+
 ## 一句话用法
 
 跟你的 AI 说:

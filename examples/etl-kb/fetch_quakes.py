@@ -5,7 +5,7 @@
 Pulls recent earthquakes from the USGS public feed (free, no auth) into a small
 SQLite database. This is the worked example referenced by references/etl-guide.md:
 a free public API -> a schema with an idempotent PK + audit columns + the
-empty/failed distinction -> a queryable table.
+empty/failed/blocked distinction -> a queryable table.
 
 Pure Python 3.9+ stdlib. Commands:
     python fetch_quakes.py fetch    # fetch the feed, upsert into quakes.db
@@ -15,7 +15,8 @@ Disciplines demonstrated (see references/etl-guide.md, pipeline-discipline.md):
 - PK = USGS event id -> re-running is idempotent (INSERT OR IGNORE).
 - audit columns: source, fetched_at.
 - reliability flag: mag_reliable=0 when magnitude is null (keep + flag, don't drop).
-- 4-way fetch status (ok/empty/gap/failed); a failed fetch is NOT an empty result.
+- 5-way fetch status (ok/empty/gap/failed/blocked); a failed fetch is NOT an empty result,
+  and a policy-blocked one is neither empty nor a config error.
 """
 import json
 import sqlite3
@@ -45,7 +46,7 @@ CREATE TABLE IF NOT EXISTS quakes (
 CREATE TABLE IF NOT EXISTS fetch_log (
     id     INTEGER PRIMARY KEY AUTOINCREMENT,
     ts     TEXT,
-    status TEXT,                     -- ok | empty | gap | failed
+    status TEXT,                     -- ok | empty | gap | failed | blocked
     items  INTEGER,
     detail TEXT
 );
@@ -56,8 +57,17 @@ def now():
     return datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%SZ")
 
 
+# A proxy/egress refusal often surfaces BELOW HTTP: an https CONNECT refused by a sandbox
+# proxy raises OSError("Tunnel connection failed: 403 Forbidden"), not an HTTPError. Classify
+# at both layers, or one identical denial lands in two different states.
+BLOCK_SIGNATURES = ("tunnel connection failed", "host_not_allowed", "proxy authentication",
+                    "forbidden by proxy", "blocked by policy")
+
+
 def http_get(url):
-    """GET url; classify errors as gap (permanent) vs failed (transient)."""
+    """GET url; classify errors as blocked (policy refusal) vs gap (permanent) vs failed
+    (transient). Three states because each needs a DIFFERENT fix: allowlist the domain /
+    fix the config / retry next round."""
     req = urllib.request.Request(url, headers={"User-Agent": "pwt-etl-example/0.1"})
     try:
         with urllib.request.urlopen(req, timeout=TIMEOUT) as r:
@@ -65,10 +75,19 @@ def http_get(url):
     except urllib.error.HTTPError as e:
         if e.code in (408, 429):
             raise RuntimeError("failed:HTTP %d (rate-limit/timeout, transient)" % e.code)
+        if e.code in (403, 407):  # refused - egress policy / anti-bot / auth: ambiguous, so
+            raise RuntimeError(   # do not assert a cause; give the troubleshooting priority
+                "blocked:HTTP %d refused. In a cloud/sandbox, check the egress allowlist FIRST "
+                "(most common); may also be anti-bot or auth. NOT evidence the feed is empty, "
+                "and retrying will not help." % e.code)
         if 400 <= e.code < 500:
             raise RuntimeError("gap:HTTP %d (check the feed URL)" % e.code)
         raise RuntimeError("failed:HTTP %d" % e.code)
-    except Exception as e:  # URLError, timeout, ...
+    except Exception as e:  # URLError, timeout, proxy CONNECT refusal, ...
+        if any(s in str(e).lower() for s in BLOCK_SIGNATURES):
+            raise RuntimeError("blocked:%s: %s - looks like an egress policy, not the feed; "
+                               "check the allowlist. Retrying will not help."
+                               % (type(e).__name__, str(e)[:80]))
         raise RuntimeError("failed:%s" % type(e).__name__)
 
 
@@ -94,7 +113,7 @@ def cmd_fetch():
             status, detail = "empty", "feed fetched fine, no events in window (genuine empty)"
     except RuntimeError as e:
         kind, _, msg = str(e).partition(":")
-        status, detail = kind, msg  # gap or failed -- NOT counted as empty
+        status, detail = kind, msg  # gap / failed / blocked -- never counted as empty
     conn.execute("INSERT INTO fetch_log (ts,status,items,detail) VALUES (?,?,?,?)",
                  (now(), status, fresh, detail))
     conn.commit()

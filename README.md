@@ -11,6 +11,10 @@ Medallion-tier curation, a librarian agent role, and QC rubrics. Works across
 **Claude Code, OpenClaw, WorkBuddy, and Codex** (any agent that can read
 markdown and run scripts, really).
 
+📖 **Not a developer? Start with the [manual](MANUAL.md)** — a plain-language
+walkthrough (no code) with a worked example, an honest local-vs-cloud comparison,
+and troubleshooting. 中文说明书:[MANUAL.zh.md](MANUAL.zh.md)。
+
 ## Use it in one sentence
 
 Tell your AI agent:

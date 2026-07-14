@@ -14,7 +14,7 @@ without an approved plan.
 ## 3. The library
 - `quakes.db` → `quakes` (id PK = USGS event id; time_utc, place, magnitude, lon,
   lat, depth_km, source, fetched_at, mag_reliable) + `fetch_log` (ts, status
-  [ok/empty/gap/failed], items, detail).
+  [ok/empty/gap/failed/blocked], items, detail).
 - `fetch_quakes.py` — the domain fetcher (idempotent upsert by event id).
 - Known blind spot: the feed is a rolling window (recent events only); this is not a
   historical catalog. Say so when asked about older quakes.

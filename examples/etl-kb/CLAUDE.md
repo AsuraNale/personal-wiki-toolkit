@@ -12,7 +12,7 @@ the essentials are below.
 
 ## Structure (quick map)
 - `quakes.db` → `quakes` table (id PK, time, place, magnitude, lon/lat, depth,
-  source, fetched_at, mag_reliable) + `fetch_log` (ok/empty/gap/failed).
+  source, fetched_at, mag_reliable) + `fetch_log` (ok/empty/gap/failed/blocked).
 - `fetch_quakes.py` — the domain fetcher.
 
 ## Commands
@@ -23,6 +23,7 @@ fetch status). Queries: read-only SQL against `quakes.db`.
 - ⛔ Report only RECORDED events. Never predict, forecast, or imply the likelihood
   of future earthquakes.
 - Every number cites its source (USGS) + snapshot date; never compute from memory.
-- Empty ≠ failed — check `fetch_log` before saying "no quakes".
+- Empty ≠ failed ≠ blocked — check `fetch_log` before saying "no quakes" (blocked = an
+  egress policy refused us; allowlist it or fetch locally — retrying is useless).
 - Rows with `mag_reliable = 0` have a missing magnitude — say so, don't guess it.
 - The decision/interpretation is the owner's.
