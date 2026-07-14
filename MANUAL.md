@@ -241,8 +241,12 @@ This library: **it remembers** (it keeps accumulating), **it's queryable** (that
 
 ⚠️ **If it didn't run, please tell us** — **a failure is a useful finding, not "nothing to report"** (which is exactly the principle this toolkit is built on). "**It didn't work**" is worth far more to us than "it was fine."
 
-**How to send feedback**: fill in this form → **`<survey link to be added>`**
-No need to tidy it up — **a screenshot plus "I got stuck at step N" is enough**.
+**How to send feedback**: fill in the form (~5 minutes, anonymous) —
+
+> **Google Form**: https://forms.gle/TToSvPRbK8H6qaZT7
+> **Tencent Docs** (if you're in mainland China): https://docs.qq.com/form/page/DSHRzUW9OWXFMekZ6
+
+No need to tidy anything up — **a screenshot plus "I got stuck at step N" is enough**.
 
 ---
 
