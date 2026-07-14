@@ -29,10 +29,25 @@ known caveats follow (verified against each ecosystem's docs, 2026-07).
   **MIT-0** and rejects non-text files (**remove `.git/` and `LICENSE`** from the
   bundle), caps the bundle at 50 MB, and requires the account to be at least a week old.
 
-## WorkBuddy (腾讯 CodeBuddy)
+## Tencent WorkBuddy
+> Say **"Tencent WorkBuddy"**, not bare "WorkBuddy": an unrelated Australian
+> field-service SaaS owns `workbuddy.com` and is what an English search finds first.
+> This one is Tencent's: <https://copilot.tencent.com/work/> — "全场景职场 AI 智能体桌面工作台"
+> (an all-scenario **workplace** AI agent desktop, i.e. an office assistant).
+
+- **Not the same product as CodeBuddy.** Both are Tencent's and share plumbing (its
+  marketplaces are served from `codebuddy.cn`), but they are siblings for different
+  audiences: **WorkBuddy** is the general/office-user app; **CodeBuddy** is the
+  developer-facing one. Everything below was verified on **WorkBuddy** — don't assume
+  it transfers to CodeBuddy.
+- **Model-pluggable:** WorkBuddy runs several models (Zhipu GLM, DeepSeek, MiniMax…),
+  so vendor and model are separate questions — don't label it by whichever model you
+  saw. Our run happened to use **Zhipu GLM 5.1**, and the toolkit's discipline held on
+  it (see README status).
 - **Install:** GUI → 技能面板 → 添加技能 → 上传技能 (select the repo folder or a zip); or
-  place it manually in `~/.workbuddy/skills/`. Officially compatible with OpenClaw
-  skill packages.
+  place it manually in `~/.workbuddy/skills/<skill-name>/SKILL.md` (project-level:
+  `.workbuddy/skills/`). Also reported to accept OpenClaw-style skill packages — we
+  used the GUI upload path, so treat the OpenClaw interop as unconfirmed.
 - **Trigger:** automatic via `description`, or explicit `@<skill-name>`. Put Chinese
   trigger words in the description — its users speak Chinese (建资料库 / 整理资料 /
   搭知识库).
@@ -52,13 +67,25 @@ known caveats follow (verified against each ecosystem's docs, 2026-07).
   add. Keep it OUT of the core repo copy so `skills-ref validate` stays clean; add it
   only in the WorkBuddy-uploaded copy).
 
-## Codex (OpenAI)
-- **Install:** copy or link the repo folder into `~/.agents/skills/`. Codex natively
-  supports the Agent Skills standard (since 2025-12) and scans `.agents/skills` —
-  **not** `.claude/skills`. The repo's `AGENTS.md` also routes clone-and-read usage.
+## Codex CLI (OpenAI)
+> **"Codex" no longer names one installable thing** — say which you mean. The standalone
+> Codex desktop app was folded into the **ChatGPT desktop app** (vendor changelog
+> 2026-07-09; Homebrew's `codex-app` cask now reads "recommended replacement: chatgpt").
+> The **Codex CLI** is alive and separate: `npm i -g @openai/codex`, or
+> `brew install --cask codex` (that cask is *not* deprecated). Docs moved too —
+> `developers.openai.com/codex/*` 308-redirects to `learn.chatgpt.com`.
+
+- **Install:** copy or link the repo folder into `~/.agents/skills/` — OpenAI lists that
+  verbatim as the user-scope skill path. Codex supports the Agent Skills standard and
+  scans `.agents/skills` — **not** `.claude/skills`. The repo's `AGENTS.md` also routes
+  clone-and-read usage. (OpenAI's own catalog prefers a `$skill-installer` command inside
+  Codex over manual copying; both work.)
 - **Trigger:** explicit `$<skill-name>`, or implicit via `description`.
-- **Caveat:** the skill-list injection budget is ~8000 characters across all skills —
-  keep the `description` short and precise.
+- **Caveats:** the skill-list injection budget is ~8000 characters across all skills —
+  keep the `description` short and precise. **The path above is verified for the CLI.**
+  Vendor docs say skills also work in the ChatGPT desktop app, but no vendor doc ties
+  that app to `$HOME/.agents/skills` — if the desktop app is all you have, use the
+  universal path (clone + "read `SKILL.md`") rather than assuming the folder is scanned.
 
 ## Level-0 mode (no Python anywhere)
 Any host where Python isn't available still works: the library keeps a Markdown index

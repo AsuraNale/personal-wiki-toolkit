@@ -5,7 +5,7 @@
 
 一套 **AI agent 技能包**:对话式面试、或拖一个文件夹给它,帮你**从零搭起一座个人知识库**
 —— Markdown + SQLite 双层存储、自动情报采集管线、Medallion 分层策展、一个"图书管理员"
-agent 角色、以及 QC 质检标准。跨 **Claude Code / OpenClaw / WorkBuddy / Codex**(其实任何
+agent 角色、以及 QC 质检标准。跨 **Claude Code / OpenClaw / 腾讯 WorkBuddy / Codex**(其实任何
 能读 markdown、跑脚本的 agent 都行)。
 
 📖 **不懂编程?先看[说明书](MANUAL.zh.md)** —— 人话版、零代码、带一个完整实例(装机价格追踪)、
@@ -69,15 +69,15 @@ my-kb/
 |---|---|
 | Claude Code | 放进 skills 目录,或直接让 agent 读这个 repo |
 | OpenClaw | `openclaw skills install git:&lt;owner&gt;/personal-wiki-toolkit`(新 session 生效) |
-| WorkBuddy | 技能面板 → 添加技能 → 上传技能(选本仓库文件夹);或手动放 `~/.workbuddy/skills/` |
-| Codex | 拷 / 链到 `~/.agents/skills/`;仓库的 `AGENTS.md` 也能路由 clone 用法 |
+| 腾讯 WorkBuddy | 技能面板 → 添加技能 → 上传技能(选本仓库文件夹);或手动放 `~/.workbuddy/skills/` |
+| Codex **CLI** | 拷 / 链到 `~/.agents/skills/`;仓库的 `AGENTS.md` 也能路由 clone 用法。(光说「Codex」现在指 ChatGPT 桌面版里的一个模式 —— 单独可装的是 CLI) |
 
 细节与各平台注意事项见 [`docs/compatibility.md`](docs/compatibility.md)。
 
 ## 状态
 
-**v0.1.2 —— pre-1.0。** 内容完整,已在**四个独立生态**端到端验证 —— Claude Code(本地)、WorkBuddy /
-CodeBuddy(智谱/GLM)、Codex(GPT 系)、**云端 Claude Code**:各是一个全新 agent 只拿 repo + 主题就从零
+**v0.1.2 —— pre-1.0。** 内容完整,已在**四个独立生态**端到端验证 —— Claude Code(本地)、WorkBuddy
+(腾讯;模型可插拔,那轮跑的是智谱 GLM 5.1)、Codex、**云端 Claude Code**:各是一个全新 agent 只拿 repo + 主题就从零
 建出能用的库,Level-0 与完整 SQLite 两种模式都跑通。这些实测暴露的改进已并入:稳健 Python 探测
 (Store/沙盒别名陷阱)、强化注入红线、数值诚实规则、Level-0 运行日志、Level-0 写入豁免、data 型
 watchlist 范围界定、原始数据行自动追加(0.1.1);以及来自云端实测的**本地 vs 云端分工**:新增可选

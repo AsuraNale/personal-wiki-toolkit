@@ -8,7 +8,7 @@ An **agent skill toolkit** that interviews you (or ingests your existing
 folders) to build a personal knowledge base from scratch — Markdown + SQLite
 dual-layer storage, an automated intelligence-collection pipeline,
 Medallion-tier curation, a librarian agent role, and QC rubrics. Works across
-**Claude Code, OpenClaw, WorkBuddy, and Codex** (any agent that can read
+**Claude Code, OpenClaw, Tencent WorkBuddy, and Codex** (any agent that can read
 markdown and run scripts, really).
 
 📖 **Not a developer? Start with the [manual](MANUAL.md)** — a plain-language
@@ -89,16 +89,16 @@ It grows every day and it can prove its own quality.
 |---|---|
 | Claude Code | drop this folder into your skills directory, or just point the agent at the repo |
 | OpenClaw | `openclaw skills install git:<owner>/personal-wiki-toolkit` (new session to take effect) |
-| WorkBuddy | 技能面板 → 添加技能 → 上传技能(选本仓库文件夹);或手动放入 `~/.workbuddy/skills/` |
-| Codex | copy/link into `~/.agents/skills/`; `AGENTS.md` here also routes repo-clone usage |
+| Tencent WorkBuddy | 技能面板 → 添加技能 → 上传技能(选本仓库文件夹);或手动放入 `~/.workbuddy/skills/` |
+| Codex **CLI** | copy/link into `~/.agents/skills/`; `AGENTS.md` here also routes repo-clone usage. (Bare "Codex" is now a mode in the ChatGPT desktop app — the CLI is the separate install) |
 
 Details and per-platform caveats: `docs/compatibility.md`.
 
 ## Status
 
 **v0.1.2 — pre-1.0.** Content-complete and end-to-end validated on **four
-independent ecosystems** — Claude Code (local), WorkBuddy / CodeBuddy (Zhipu/GLM),
-Codex (GPT-class), and **Claude Code in the cloud** — each a fresh agent that built
+independent ecosystems** — Claude Code (local), WorkBuddy (Tencent; model-pluggable —
+that run used Zhipu GLM 5.1), Codex, and **Claude Code in the cloud** — each a fresh agent that built
 a working library from just this repo + a topic, unaided, in Level-0 *and*
 full-SQLite modes. Those runs surfaced refinements now folded in: robust Python
 detection (Store / sandbox alias traps), a hardened prompt-injection red line,
