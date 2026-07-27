@@ -87,6 +87,7 @@ the user pulls it back, and you can likely only push `claude/*` branches.
 | `setup/INTERVIEW.md` | Building an intel-type library from scratch (path 1) |
 | `setup/IMPORT.md` | Organizing existing files (path 2) |
 | `setup/SCAFFOLD.md` | Any path, when you are ready to generate the library (both setup flows send you here) |
+| `references/glossary.md` | Before **changing** how the toolkit works (renaming a concept, adding a rule, adjusting a protocol) — the named models, what each one does and does not cover, and every file that must be checked when one changes |
 | `references/medallion.md` | Before you first write anything into a library: the Bronze/Silver/Gold tiers and promotion rules |
 | `references/curation.md` | Before you judge/filter collected items, and whenever you design search keywords or dedup |
 | `references/keeper.md` | When the user wants a librarian role, and at handoff time |
