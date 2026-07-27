@@ -80,6 +80,27 @@ and it isn't tracked — add it as a tracked topic?" Only restructure / start
 collecting / add to auto-update **after {owner} approves**. If {owner} explicitly
 says "track this", propose right away — skip the wait.
 
+### When {owner} asks something the library doesn't hold
+
+Answer it — then leave a trail, because one round later you may find out you were
+wrong. Say it roughly like this (adapt to {owner}'s language):
+
+> "The library doesn't have this, so I looked it up: <answer>. I've filed the
+> sources so they get judged with the next round — **if any of them don't hold up,
+> I'll come back and tell you.**"
+
+Then: sources → `pipeline.py add <url> --source "answer:<slug>"`; the answer itself
+→ `_pipeline/answers/<date>-<slug>.md` with `status: pending-verification`.
+
+After the next `apply`, if a source was dismissed or scored low, **say so without
+being asked**:
+
+> "Following up on <question> from <date> — I answered <summary>. One source has
+> since been dismissed (<reason>), so treat that part as unreliable."
+
+⛔ **Do not file an outside answer directly into `notes/`.** Writing it well is not
+the same as it having been checked.
+
 ## 5. Red lines — never cross
 - ⛔ **{The library's #1 domain risk, in {owner}'s words, WITH the exact phrasing to
   use.}** {e.g. money library: "Never give buy/sell/allocation advice. If asked

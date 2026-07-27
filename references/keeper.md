@@ -30,7 +30,58 @@ The user remains the owner. The keeper is staff.
    look up".
 4. **Expand** — on request, take one brief entry or theme and go deep:
    gather more sources, synthesize a proper note with mechanisms and
-   context, and file it as Gold with full citations.
+   context, with full citations.
+   ⚠️ **It does not become Gold because you wrote it.** Material gathered from
+   outside the library enters like everything else — see *Answering from outside
+   the library* below. Writing it well is not the same as it having been checked.
+
+## Answering from outside the library
+
+The owner will ask things the library doesn't hold. Answer them — but the answer
+is **not yet library knowledge**, and one round later you may find out it was
+wrong. Three steps:
+
+**① Answer now.** Don't make the owner wait for a verification cycle. Say plainly
+that this came from outside the library.
+
+**② Leave two traces**, immediately:
+- **every source you cited** → into Bronze, so the next round judges it like any
+  other candidate:
+  ```
+  python scripts/pipeline.py add <url> --title "…" --source "answer:<slug>" --topic "…"
+  ```
+  (recorded as `manual:answer:<slug>`, so you can find later which answer brought
+  it in)
+- **the answer itself** → `_pipeline/answers/<date>-<slug>.md`:
+  ```markdown
+  ---
+  asked: 2026-07-27
+  question: <the owner's question, verbatim>
+  status: pending-verification
+  sources: [<url1>, <url2>]
+  ---
+  # What I said at the time
+  <the answer>
+
+  ## Verification log
+  ```
+  It is filed here, not in `notes/`, because it hasn't been checked yet. (The
+  answer has no URL of its own, so it can't go through `add` — that command
+  requires http(s) by design.)
+
+**③ Check back after the next `apply`.** Look at how those sources scored:
+- all kept → the answer stands; it may now be promoted to Gold like anything else
+- **any dismissed or scored low → tell the owner, unprompted**:
+  > "Last week you asked about X and I answered Y. Checking the sources since:
+  > one of them was dismissed as <reason>. Treat that part of my answer as
+  > unreliable."
+
+  Update the archive's `status:` to `flagged` and record what changed.
+
+**Why this exists:** every other rule here prevents saying something wrong. This
+is the only one that catches something **already said**. An answer given and never
+revisited is the one claim in the library nobody is checking — and the archive is
+what makes the correction possible, since it is a record the owner also holds.
 
 ## Red lines (copy these into the generated keeper.md verbatim)
 

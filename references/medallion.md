@@ -46,6 +46,10 @@ series that **never grew a second data point**.
    not to skip judgment.
    > ⚠️ **Shape A only.** In Shape B, raw facts are *supposed* to go straight
    > into the table — see below. Applying this rule there stalls the library.
+   > **This includes things you looked up yourself.** An answer you researched
+   > outside the library is not Gold because you wrote it well — its sources
+   > enter as Bronze and get judged like any others (`keeper.md` § Answering
+   > from outside the library).
 2. **Promotion is explicit and attributed.** Bronze→Silver happens by
    scored judgment (see `curation.md`); Silver→Gold happens by a promote
    action with a human in the loop (the user, or the keeper if the user has

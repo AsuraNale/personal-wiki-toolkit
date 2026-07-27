@@ -27,9 +27,41 @@ missing pieces, leave existing ones alone, and say what you skipped).
 └── keeper.md            librarian instructions (if keeper enabled)
 ```
 
-Import-type libraries: `notes/` is replaced by the approved category tree
-(index-in-place mode leaves user files where they are; the tree then only
-holds NEW notes). Level-0 mode: `index.md` + `_pipeline/seen.md` replace the
+### Adjust the tree to the library's shape
+
+The layout above is **Shape A** (adjudication: intel / import). Check
+`config.type` and `references/medallion.md` before generating:
+
+**Shape A · intel** — organize `notes/` by topic count (**NEW-8**):
+- **≤2 topics** → keep `notes/` flat. Sub-directories for two topics are pure
+  overhead, and a nearly-empty folder reads as "nothing here".
+- **≥3 topics** → one directory per topic, named from the topic's `key`
+  (`notes/agent-tooling/`). Agree the directory name **while drafting the topics
+  table** — retro-filing is how notes end up in two places at once.
+
+**Shape A · import** — `notes/` is replaced by the approved category tree
+(index-in-place mode leaves user files where they are; the tree then only holds
+NEW notes).
+
+**Shape B · data/ETL** — a different tree, because the pipeline is yours to write:
+```
+├── <domain>.db          the facts + a fetch_log (you design the schema)
+├── fetch_<domain>.py    your domain fetcher — the toolkit has no scaffold for it
+├── tables/              DERIVED: recomputable rollups. Never hand-edited
+├── notes/              CONCLUSIONS = Gold: human-written analysis
+├── briefs/              periodic drafts for the human to react to (the cadence)
+└── _pipeline/logs/
+```
+⚠️ **Do not create `_pipeline/silver/` or the `seen`/`silver` tables for Shape B.**
+There is no per-row adjudication queue here; facts land final on write. A recall
+library built with the Shape A scaffold left its Silver at 21 rows, 0 promoted /
+0 dismissed, while the real data accumulated in a table beside it.
+
+⚠️ **Keep Derived out of `notes/`.** `tables/` and generated `briefs/` are
+recomputable; `notes/` is what a human decided. Mixing them makes the library's
+health unreadable in both directions — see `medallion.md` Shape B rule 3.
+
+**Level-0 mode** (either shape): `index.md` + `_pipeline/seen.md` replace the
 two .db files.
 
 Naming: keep the user's language for directory display names ONLY if the
@@ -146,5 +178,15 @@ If demand-tracking is on, the keeper logs out-of-library queries with
 - [ ] schedule registered by user, or manual mode acknowledged
 - [ ] if keeper enabled: `keeper.md` instantiated, type preset chosen, top red line
       captured as phrasing, first-run rite done (map verified against the real library)
+- [ ] **Intake recorded**: `config.json` carries `$intake`, and nothing in it is
+      `agent-inferred` (see `setup/INTERVIEW.md` § Intake)
+- [ ] **Shape B only — the human loop is actually wired**, both halves:
+      - [ ] ① a draft is produced on a stated cadence (EOD / weekly), not "when
+            someone remembers" — without something to react to, nobody starts
+      - [ ] ② a verdict, once made, **lands back in the library** as a file citing
+            what it came from (`> **Promoted from**: <item/URL>`). Four highly
+            active libraries with no ① produced zero human Gold; one with ① but
+            no ② also shows zero, because its verdicts were only ever made
+            outside the library
 - [ ] → return to your setup flow; the first-run phase (INTERVIEW Phase 3)
       is NOT optional

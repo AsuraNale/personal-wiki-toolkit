@@ -211,7 +211,7 @@ the user pulls it back, and you can likely only push `claude/*` branches.
 | `references/glossary.md` | Before **changing** how the toolkit works (renaming a concept, adding a rule, adjusting a protocol) — the named models, what each one does and does not cover, and every file that must be checked when one changes |
 | `references/medallion.md` | Before you first write anything into a library: the Bronze/Silver/Gold tiers and promotion rules |
 | `references/curation.md` | Before you judge/filter collected items, and whenever you design search keywords or dedup |
-| `references/keeper.md` | When the user wants a librarian role, and at handoff time |
+| `references/keeper.md` | When the user wants a librarian role, and at handoff time — also covers answering questions the library can't answer, and going back to correct such an answer once its sources have been judged |
 | `references/qc-rubric.md` | When you or the user wants to verify library quality; also read before claiming any setup step "done" |
 | `references/pipeline-discipline.md` | Before you write or schedule any fetch automation |
 | `references/storage.md` | When designing the SQLite schema or deciding what goes in Markdown vs the index |
