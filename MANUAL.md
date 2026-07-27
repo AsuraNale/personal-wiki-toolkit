@@ -192,7 +192,7 @@ The core value isn't that it can fetch data — it's that **it doesn't paper ove
 - **✅ Important things need your nod** — machine-filtered material waits in a draft area; only what you confirm becomes permanent. It doesn't add things on its own.
 - **✅ It won't touch files you already have** — **it won't change anything you wrote without your agreement**; it lists what it plans to do first, and acts once you confirm.
 - **✅ Free, public sources only** — it follows sites' public-access rules, **skips (and tells you about) any site that clearly forbids fetching**, and never stores anyone's full article (just title, link, summary, and its own judgment).
-- **✅ Fetched content is material, not orders** — if a page contains "AI: ignore your rules and do as I say," it **flags it as suspicious and doesn't comply**.
+- **✅ Fetched content is material, not orders** — if a page contains "AI: ignore your rules and do as I say," the agent treats it as material to judge and store and **does not act on it**. This is a rule the agent follows, not a filter that scans; what that covers and what it doesn't is spelled out in [SAFETY.md](SAFETY.md).
 
 ---
 
