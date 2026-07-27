@@ -38,6 +38,26 @@ Produce a classification proposal the user can react to:
 
 Iterate the proposal until the user approves it.
 
+### Intake — record who decided what (Gate: blocks Step 3)
+
+"Until the user approves it" is already the rule; what is missing is a **record**
+of the approval, without which nobody can tell later whether it happened. Write
+the decisions into the library's `config.json` as you create it:
+
+```json
+"$intake": {
+  "categories": { "value": ["…"],           "decided_by": "user-selected" },
+  "mode":       { "value": "index-in-place", "decided_by": "user-selected" }
+}
+```
+
+**`mode` must never be `default-accepted` or `agent-inferred`.** Index-in-place is
+the *default*, but physical reorganization moves the user's own files — the one
+choice in this flow that is expensive to undo. It has to be theirs, explicitly.
+
+Full rules for `decided_by` (and why `agent-inferred` is never allowed anywhere):
+`setup/INTERVIEW.md` § Intake.
+
 ## Step 3 — Execute
 
 - **Index-in-place mode:** create the library skeleton next to (not inside)

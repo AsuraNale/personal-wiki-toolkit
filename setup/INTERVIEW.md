@@ -13,7 +13,12 @@ prove it works → hand over. Conduct everything in the user's language.
 
 ---
 
-## Phase 1 — Understand the need (aim: ≤3 exchanges)
+## Phase 1 — Understand the need
+
+Keep it short — but **let the record decide when you are done, not a question
+count.** Phase 1 is complete when every item below is settled *and marked with who
+settled it* (see **Intake** at the end of this phase). Batching several choices
+into one message is how you keep it brief. Deciding on the user's behalf is not.
 
 Collect, in whatever order the conversation allows:
 
@@ -38,9 +43,14 @@ Collect, in whatever order the conversation allows:
    Aim for 3–8 sources total. More sources ≠ better — every source adds noise
    to judge. Verify each feed actually fetches on the first run — swap out any
    that come back `gap`.
-4. **Cadence & threshold.** Defaults: daily collection, keep-threshold 0.7
-   (items you judge below it stay in Bronze, invisible). Only surface these
-   if the user seems opinionated; otherwise state the defaults and move on.
+4. **Cadence & threshold.** Defaults: daily collection, keep-threshold 0.7.
+   **Say both defaults out loud, with what they mean**, then let the user accept
+   them — most will, and that is fine. What is not fine is deciding silently:
+   the threshold governs *what this library will never show them* (anything you
+   score below it stays in Bronze, invisible), so picking it on their behalf
+   without saying so is not a shortcut — it is an unannounced edit to everything
+   they will ever see. Accepting a stated default is a decision; never being told
+   is not.
 5. **Keeper?** Default yes: a named librarian role with written duties
    (`references/keeper.md`). If the user will only ever chat casually with
    the library, they can skip it.
@@ -48,6 +58,50 @@ Collect, in whatever order the conversation allows:
 **Artifact:** a filled `config.json` draft (schema:
 `templates/config.example.json`), shown to the user for one confirmation
 pass. Do not proceed to Phase 2 without an explicit "looks good".
+
+### Intake — record who decided what (Gate: blocks scaffolding)
+
+That confirmation above has always been required. What was missing is any **record
+of it**, which means nobody — not the user, not a reviewer, not you next week —
+can tell whether it happened. Fix that by writing the decisions into the config
+you are already producing:
+
+```json
+"$intake": {
+  "domain":    { "value": "agent tooling for practitioners", "decided_by": "user-typed" },
+  "topics":    { "value": ["…"],  "decided_by": "user-selected" },
+  "sources":   { "value": ["…"],  "decided_by": "user-selected" },
+  "cadence":   { "value": "daily", "decided_by": "default-accepted" },
+  "threshold": { "value": 0.7,     "decided_by": "default-accepted" },
+  "keeper":    { "value": true,    "decided_by": "user-selected" }
+}
+```
+
+**Three values, and the line between them is whether the user knew:**
+
+| `decided_by` | Means | Allowed on |
+|---|---|---|
+| `user-typed` / `user-selected` | they said it, or picked it from options you offered | anything |
+| `default-accepted` | **you stated the default and its effect**, and they took it | `cadence`, `threshold`, `keeper` only |
+| ⛔ `agent-inferred` | you decided quietly; they never knew it was a question | **nothing — this is the failure** |
+
+**The check, before you scaffold:**
+- any field marked `agent-inferred` → **stop, go back and ask**
+- `domain` / `topics` / `sources` marked `default-accepted` → **stop**; these have
+  no sensible default, so a "default" there means it was really inferred
+
+**`default-accepted` is not a free pass.** You may only write it if you actually
+said the default *and what it does* — "the threshold defaults to 0.7, so anything
+I score below that stays out of sight" — not if you merely defaulted internally.
+
+**Why record rather than force a choice:** asking a first-time user to pick
+between 0.6 / 0.7 / 0.8 is a fake choice — they have no basis yet. **Telling them
+is more honest than making them choose.** But telling them and recording that you
+told them is the part that has to be true.
+
+> Prefer options over open questions wherever the answer is enumerable — you draft
+> the topics and sources, the user ticks and edits. That is not only easier for
+> them; a set of ticked options is **checkable later**, and free text is not.
 
 ---
 
