@@ -41,6 +41,66 @@ A library directory owned by the user, containing:
 - the library's own agent-memory file (`CLAUDE.md` / `AGENTS.md`), so the
   toolkit is disposable after setup — the library explains itself.
 
+## Gates: steps that must be provably done, not merely done
+
+Two steps in this flow are **Gates**. A Gate is not a checklist item — it blocks.
+You may not proceed past one until it has produced **evidence you could not have
+fabricated on your own**: either the user confirms something with their own eyes,
+or an artifact is left on disk that a third party can inspect.
+
+| Gate | Blocks | Evidence it must leave |
+|---|---|---|
+| **Preflight** (below) | everything | a file **the user has looked at**, where they expect it |
+| **Intake** (`setup/INTERVIEW.md`, `setup/IMPORT.md`) | scaffolding | the user's own words/choices, recorded in `config.json` |
+
+**A Gate you passed but cannot prove you passed has not been passed.** Every
+failure this toolkit has shipped against was of that shape: the step was
+performed, and nothing could verify it. See `references/glossary.md`.
+
+> Distinct from a **Cadence** (a recurring duty, e.g. "produce a draft every
+> week"). Missing a Cadence means catching up; failing a Gate means stopping.
+
+## Gate 0 — Preflight: prove you can write to the user's machine
+
+**Before anything else — before routing the request, before reading any config,
+before touching any script.**
+
+You are about to build something whose entire value is that it exists as real
+files on the user's computer. If you cannot put files there, everything after
+this point is theatre. **This has actually happened**: a user finished a session
+believing a library had been built, in an assistant that had no filesystem access
+at all.
+
+Three stages, in order:
+
+1. **Say where.** State the **absolute path** you are about to build in, and let
+   the user see it before you write anything. This alone catches two of the four
+   failure modes — a sandbox path that isn't their machine, and a working
+   directory that isn't the folder they meant.
+2. **Write, read back, compare.** Create a small file, read it back, and compare
+   the content verbatim. This catches "no filesystem at all" and "read-only".
+3. ⭐ **Have the user look.** Ask them to confirm the file is really there, at
+   that path, on their machine.
+
+**Stage 3 is not politeness — it is the only stage that can work.** Stages 1–2
+run entirely inside your own environment, so they pass happily inside a cloud
+sandbox whose files never reach the user at all. **You cannot prove from your own
+side that "where I wrote" is "where the user looks."** Only the user can close
+that gap.
+
+### Red lines
+
+- **Fail → hard stop.** Say plainly that this assistant cannot build the library,
+  and what would work instead. ⛔ Never degrade to "I'll simulate one in this
+  chat" or "I'll write it out and you can save it" — that is the exact failure
+  this Gate exists to prevent.
+- **A passing probe is not enough.** Until the user has confirmed stage 3, you
+  may not say the library exists. "It says it built it" is how the original
+  failure was reported.
+- **Never delete the evidence before the user has seen it.** A file you wrote,
+  read, and removed proves nothing — that closed loop is what
+  `references/qc-rubric.md` rules out: verify from the source, not from the claim.
+
 ## Start here: route the request
 
 Ask at most THREE questions to classify the job, then follow exactly one path:

@@ -64,6 +64,19 @@ Do not file a Cadence as a Gate. "Produce a draft every week" blocks nothing;
 > back, and then deleted — a closed loop, which `qc-rubric.md:7` ("verify from the
 > source, not from the claim") already forbids.
 
+**A Gate is usually not a new door — it is an evidence requirement added to a door
+that already exists.** Three of this toolkit's known failures share one shape, and
+it is not "the step was skipped":
+
+| Already doing the right thing | What was missing |
+|---|---|
+| `INTERVIEW.md:48-50` demands an explicit "looks good" before scaffolding | no record of it, so nothing can verify it |
+| The first Preflight draft did verify write access | it verified itself, then deleted the proof |
+| A production stock library's owner really does adjudicate | the verdicts were never written back to the library |
+
+All three **did the work and could not prove it.** Look for the existing door
+before building one.
+
 ---
 
 ## 1. Medallion — `active`
