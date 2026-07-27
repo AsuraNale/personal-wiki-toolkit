@@ -2,7 +2,7 @@
 
 > Build, feed, and curate your personal wiki — with an AI librarian that
 > never skips QC.
-> 让 AI 管家帮你从零建库、持续喂库、按纪律策展。 · 中文版:[README.zh.md](README.zh.md)
+> 让 AI 管家帮你从零建库、持续喂库、按纪律策展。 · 中文用户:[使用说明书 MANUAL.zh.md](MANUAL.zh.md)
 
 An **agent skill toolkit** that interviews you (or ingests your existing
 folders) to build a personal knowledge base from scratch — Markdown + SQLite

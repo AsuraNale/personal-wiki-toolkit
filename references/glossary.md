@@ -90,7 +90,7 @@ before building one.
 | **Spec lives in** | `references/medallion.md` |
 | **Enforced in code by** | `scripts/pipeline.py` — `seen` / `silver` tables, `promote` / `dismiss` |
 | **Does NOT cover** | Shape B (§2) · how items are scored (§3 Curation) · fetch status (§4) |
-| **Referenced by** | **core:** `SKILL.md` · `README.md` · `README.zh.md` · `references/{curation,etl-guide,storage,keeper,qc-rubric,cloud}.md` · `setup/{INTERVIEW,SCAFFOLD}.md` · `templates/{kb-agent-memory,keeper-instructions}.template.md` · `scripts/{pipeline,index_db}.py`<br/>**examples/tests:** `examples/intel-kb/*` · `examples/etl-kb/README.md` · `tests/test_pipeline.py` |
+| **Referenced by** | **core:** `SKILL.md` · `README.md` · `references/{curation,etl-guide,storage,keeper,qc-rubric,cloud}.md` · `setup/{INTERVIEW,SCAFFOLD}.md` · `templates/{kb-agent-memory,keeper-instructions}.template.md` · `scripts/{pipeline,index_db}.py`<br/>**examples/tests:** `examples/intel-kb/*` · `examples/etl-kb/README.md` · `tests/test_pipeline.py` |
 | **Evidence** | Borrowed from data engineering's medallion architecture (`medallion.md:5`). **Its failure mode is documented**: applied to a data library, Silver silts up — one production recall library sat at 21 Silver rows, 0 promoted / 0 dismissed, while its real table accumulated 567 records around it; the whole scaffold was deleted in the rewrite |
 | **Status** | `active` |
 | **Version history** | v0.1.2 as shipped · **v0.1.3 adds the "applies to" limit** (it previously claimed universal scope) |

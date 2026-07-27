@@ -110,6 +110,47 @@ def pipeline_dir(root, config):
     return root / config.get("paths", {}).get("pipeline", "_pipeline")
 
 
+VALID_TYPES = ("intel", "import", "data")
+
+
+def library_shapes(config):
+    """Return (shapes, problem, inferred_from) for config['type'].
+
+    `type` names the library's SHAPE, which decides which tier model applies
+    (see references/medallion.md). Accepts a string, or a list for a composite
+    library — the format allows arrays now, before any library exists that needs
+    one, because there is no config-migration mechanism: a format widened later
+    cannot reach libraries already on disk.
+
+    Two failure kinds, kept apart on purpose:
+      problem       -> the value is WRONG (a typo silently mis-shapes the library)
+      inferred_from -> the key is ABSENT (older libraries predate it); we infer
+                       and say so, rather than breaking them
+    Exactly one of the two is ever non-empty.
+    """
+    if "type" not in config:
+        # Absent. Presence of toolkit-managed sources is the signal: data libraries
+        # write their own fetchers and do not use config sources at all.
+        srcs = config.get("sources")
+        if isinstance(srcs, list) and srcs:
+            return ["intel"], "", "it has config sources"
+        return ["data"], "", "it has no config sources"
+    raw = config["type"]
+    if raw is None:
+        # Present but null — that is a written value, not an omission, so it is
+        # reported rather than inferred around.
+        return ["intel"], "type is null; expected one of %s" % "/".join(VALID_TYPES), ""
+    vals = raw if isinstance(raw, list) else [raw]
+    if not vals:
+        return ["intel"], "type is an empty list; expected one of %s" % "/".join(VALID_TYPES), ""
+    bad = [v for v in vals if not isinstance(v, str) or v.lower() not in VALID_TYPES]
+    if bad:
+        return ([v for v in vals if isinstance(v, str)] or ["intel"],
+                "type %r is not one of %s (a typo here silently mis-shapes the whole library)"
+                % (bad[0], "/".join(VALID_TYPES)), "")
+    return [v.lower() for v in vals], "", ""
+
+
 def threshold_of(config):
     try:
         return float(config.get("thresholds", {}).get("keep", DEFAULT_THRESHOLD))
@@ -581,9 +622,20 @@ def cmd_selftest(root_hint=None):
         failures_cfg.append("parse")
 
     if config is not None:
-        for key in ("name", "type", "sources", "paths"):
+        for key in ("name", "sources", "paths"):
             if not check("config has %r" % key, key in config):
                 failures_cfg.append(key)
+        shapes, problem, inferred = library_shapes(config)
+        if inferred:
+            # Absent means "never written" — infer, say so out loud, and keep going.
+            # Libraries built before this key existed must not break on it.
+            check("config type (inferred: %s)" % "+".join(shapes), True,
+                  "no 'type' key — inferred because %s; add it to be explicit" % inferred)
+        elif not check("config type valid", not problem, problem or "+".join(shapes)):
+            # Present but wrong is a different thing from absent, and papering over
+            # it silently would turn a config error invisible — precisely the class
+            # of failure this release exists to remove.
+            failures_cfg.append("type")
         srcs = config.get("sources", [])
         if not check("sources is a non-empty list", isinstance(srcs, list) and len(srcs) > 0,
                      "%d source(s)" % (len(srcs) if isinstance(srcs, list) else 0)):

@@ -11,8 +11,14 @@ Rules — from this toolkit's own hard-won lessons; keep them:
   file that states the red lines and the library map precisely beats a padded one.
 - Identity ≤ 3 sentences (section 1). Piling on persona detail makes the model
   perform the persona instead of doing the job.
-- Section 4/5 vary by library TYPE. Pick ONE preset (intel / data / full-run),
-  keep it, delete the other two.
+- Section 4/5 vary by what the keeper DOES. Pick ONE preset below, keep it, delete
+  the rest. Note these are duty presets, NOT the same axis as `config.type`:
+    INTEL    -> config.type intel (tracks a domain: collect, judge, brief)
+    DATA     -> config.type data  (accumulate facts, curate conclusions)
+    FULL-RUN -> an autonomy level, orthogonal to type: end-to-end operation
+                incl. proactive alerts. Layer it on whichever of the two fits.
+  ⚠️ There is no IMPORT preset yet — for an import-type library, start from
+  INTEL and cut the collection duties, keeping Q&A + index upkeep.
 - Section 3 (the library map) MUST be verified against the REAL library during
   setup — never write it from memory. This is where paper-vs-reality gaps hide.
 - The last two red lines in §5 (never-fabricate + fetched-content-≠-instructions)

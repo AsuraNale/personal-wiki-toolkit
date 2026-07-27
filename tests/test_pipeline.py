@@ -411,9 +411,54 @@ def test_manual_add():
     conn.close()
 
 
+# ---------------------------------------------------------------- library type / shape
+
+
+def test_library_type_validation():
+    print("== config.type: absent is inferred, wrong is reported ==")
+    # Absent -> infer and say so. Libraries built before this key existed must not break.
+    sh, prob, inf = pipeline.library_shapes({"sources": [{"kind": "hn"}]})
+    check("no type + has sources -> intel, inferred not faulted", sh == ["intel"] and not prob and inf)
+    sh, prob, inf = pipeline.library_shapes({})
+    check("no type + no sources -> data, inferred", sh == ["data"] and not prob and inf)
+    sh, prob, inf = pipeline.library_shapes({"sources": []})
+    check("empty sources list is not 'has sources'", sh == ["data"] and not prob)
+
+    for v in ("intel", "import", "data", "DATA"):
+        sh, prob, inf = pipeline.library_shapes({"type": v})
+        check("valid type %r accepted (case-insensitive)" % v, sh == [v.lower()] and not prob and not inf)
+
+    # Composite shape: the format accepts arrays BEFORE one is needed, because there
+    # is no config migration — a format widened later can't reach libraries on disk.
+    sh, prob, _ = pipeline.library_shapes({"type": ["intel", "data"]})
+    check("composite ['intel','data'] accepted, order preserved", sh == ["intel", "data"] and not prob)
+
+    # Present-but-wrong must be REPORTED, never silently inferred around: a typo here
+    # mis-shapes the whole library, and papering over it hides a config error.
+    for v, label in (("banana", "typo"), (123, "number"), (None, "null"),
+                     ([], "empty list"), (["intel", "banana"], "array with a bad entry"),
+                     ("hybrid", "the removed 'hybrid' value")):
+        _, prob, inf = pipeline.library_shapes({"type": v})
+        check("invalid type (%s) -> problem, not inference" % label, bool(prob) and not inf, repr(v))
+
+    # selftest: absent type passes (back-compat), bogus type fails.
+    cfg = fresh_sandbox()
+    root = SANDBOX
+    os.chdir(root)
+    conf = json.loads((root / "config.json").read_text(encoding="utf-8"))
+    conf.pop("type", None)
+    (root / "config.json").write_text(json.dumps(conf), encoding="utf-8")
+    check("selftest passes on a legacy config with no type", pipeline.cmd_selftest() == 0)
+    conf["type"] = "banana"
+    (root / "config.json").write_text(json.dumps(conf), encoding="utf-8")
+    check("selftest FAILS on type='banana' (was silently accepted before)",
+          pipeline.cmd_selftest() == 2)
+
+
 def main():
     try:
         test_feed_parsing()
+        test_library_type_validation()
         test_status_classification()
         test_hn_client_side_filter()
         test_source_health_banner()

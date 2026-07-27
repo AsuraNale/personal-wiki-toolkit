@@ -108,9 +108,12 @@ in this library assumes — see `references/keeper.md` for the full role. Set it
 
 1. **Name it.** Ask the owner to pick the keeper's name — a *named* role gets
    treated as staff; an unnamed one gets ignored.
-2. **Pick the type preset:** intel (tracks a domain) / data (structured numbers) /
-   full-run (operates the library end to end, incl. proactive alerts). This selects
-   the duties + red-line flavor in the template.
+2. **Pick the duty preset.** `INTEL` (for `config.type` intel) / `DATA` (for
+   `config.type` data) — plus `FULL-RUN`, which is **not a type** but an autonomy
+   level (end-to-end operation incl. proactive alerts) layered on either. This
+   selects the duties + red-line flavor in the template. **No IMPORT preset exists
+   yet** — for an import-type library, start from INTEL and cut the collection
+   duties. (Library shapes themselves: `references/medallion.md`.)
 3. **Ask the one question that writes the top red line:** *"What is the worst
    mistake this keeper could make?"* The answer becomes the ⛔ first red line — and
    capture it as *the actual phrasing to use*, not just a principle (principles get

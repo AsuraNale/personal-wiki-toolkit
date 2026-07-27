@@ -2,7 +2,7 @@
   "$comment": "Library configuration — single source of truth for all scripts. Copy as <library-root>/config.json. Scripts read ONLY this file; users edit keywords/sources here, never the scripts.",
   "name": "my-kb",
   "type": "intel",
-  "$comment_type": "intel | import | hybrid",
+  "$comment_type": "intel | import | data  — the library SHAPE. Adjudication shapes (intel/import) use Bronze/Silver/Gold; data uses Fact/Derived/Conclusion. See references/medallion.md. A composite library may use an array, e.g. [\"intel\",\"data\"]; the first entry is the primary shape.",
   "language": "en",
   "$comment_language": "language for generated notes/briefs (e.g. en, zh)",
   "topics": [

@@ -34,12 +34,33 @@ A library directory owned by the user, containing:
 - a **SQLite index** (or a Markdown index table in Level-0 mode — see below),
 - optionally a **collection pipeline** (scripts + schedule) that pulls new
   material from free public sources,
-- a **curation workflow** (Bronze → Silver → Gold) so noise never becomes
-  "knowledge",
+- a **curation workflow** so noise never becomes "knowledge" — Bronze → Silver →
+  Gold for libraries that adjudicate items, Fact → Derived → Conclusion for
+  libraries that accumulate data (`references/medallion.md`),
 - optionally a **librarian agent role** ("keeper") with written duties and
   red lines, so any future agent session knows how to tend this library,
 - the library's own agent-memory file (`CLAUDE.md` / `AGENTS.md`), so the
   toolkit is disposable after setup — the library explains itself.
+
+## What is non-negotiable, and what is a choice of shape
+
+Three disciplines hold in **every** library this toolkit builds:
+
+1. **Report collection status honestly** — `ok / empty / gap / failed / blocked`,
+   because each needs a different fix and a fetch that never happened is not an
+   empty one (*Fetch Honesty Protocol*)
+2. **Everything carries its source and date**
+3. **Gold is what a human decided to keep** — machine confidence never promotes
+   itself
+
+**Bronze → Silver → Gold is not a fourth one.** It is the organising *shape* of
+adjudication-type libraries; data libraries use a different one (Fact → Derived →
+Conclusion), and forcing the tiers onto them stalls the library outright — see
+`references/medallion.md`.
+
+> The evidence for that split is blunt: the fetch-status code is reused almost
+> verbatim across both shapes, while the tier tables are reused **zero** times.
+> Terms, scope and history for all of this: `references/glossary.md`.
 
 ## Gates: steps that must be provably done, not merely done
 
