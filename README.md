@@ -16,6 +16,10 @@ markdown and run scripts, really).
 walkthrough (no code) with a worked example, an honest local-vs-cloud comparison,
 and troubleshooting. 中文说明书:[MANUAL.zh.md](MANUAL.zh.md)。
 
+🛡️ **Letting an agent fetch from the open web on your behalf?** Read
+[SAFETY.md](SAFETY.md) — what the toolkit commits to, where the injection rule is
+enforced, and what it explicitly does *not* protect you from. 中文:[SAFETY.zh.md](SAFETY.zh.md)。
+
 ## Use it in one sentence
 
 Tell your AI agent:
@@ -97,12 +101,17 @@ Details and per-platform caveats: `docs/compatibility.md`.
 
 ## Status
 
-**v0.1.3 — pre-1.0.** Validated end-to-end on **three agent ecosystems** — Claude
-Code (local *and* cloud), Tencent WorkBuddy, and Codex — each a fresh agent that
-built a working library from just this repo plus a topic, unaided, in Level-0 *and*
-full-SQLite modes.
+**v0.1.3 — pre-1.0.** The build path is validated end-to-end on **three agent
+ecosystems** — Claude Code (local *and* cloud), Tencent WorkBuddy, and Codex —
+each a fresh agent that built a working library from just this repo plus a topic,
+unaided, in Level-0 *and* full-SQLite modes. That run predates this release: the
+two gates added in 0.1.3 are specified and checked at the document level, but
+their runtime behaviour has **not** been exercised in a live session. See
+[CHANGELOG.md](CHANGELOG.md) § *Verified at the document level only* for exactly
+which seven behaviours that covers.
 
-**What 0.1.3 changed**, in one line each:
+**What 0.1.3 changed**, in one line each — full log in
+[CHANGELOG.md](CHANGELOG.md) (中文:[CHANGELOG.zh.md](CHANGELOG.zh.md)):
 
 - **It stops pretending.** A **Preflight** gate now runs before anything else and
   ends with *the user* confirming a file appeared on *their* machine — because an

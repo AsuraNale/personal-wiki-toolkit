@@ -241,7 +241,7 @@ This library: **it remembers** (it keeps accumulating), **it's queryable** (that
 
 ## 📣 About this test
 
-**v0.1.2 is an early build. What we most want to know:**
+**v0.1.3 is an early build. What we most want to know:**
 
 - Did the first round **actually finish**?
 - **Where did you get stuck?**
@@ -258,4 +258,4 @@ No need to tidy anything up — **a screenshot plus "I got stuck at step N" is e
 
 ---
 
-*Personal Wiki Toolkit · v0.1.2 · MIT licence · Chinese version: [MANUAL.zh.md](MANUAL.zh.md)*
+*Personal Wiki Toolkit · v0.1.3 · MIT licence · Safety and operating rules: [SAFETY.md](SAFETY.md) · Chinese version: [MANUAL.zh.md](MANUAL.zh.md)*
