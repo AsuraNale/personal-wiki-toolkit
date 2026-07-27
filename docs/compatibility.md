@@ -15,6 +15,9 @@ known caveats follow (verified against each ecosystem's docs, 2026-07).
 - Native — skills run as a tool with their own context. No caveats.
 
 ## OpenClaw
+
+> ⚠️ **Not verified.** The instructions below follow OpenClaw's documented skill
+> format, but no end-to-end build has been run on it. Treat as best-effort.
 - **Install:** `openclaw skills install git:&lt;owner&gt;/personal-wiki-toolkit`, or copy
   the folder into `<workspace>/skills/`. Takes effect on a **new session** (skills are
   snapshotted at session start).
@@ -94,6 +97,6 @@ fetch scripts. All curation discipline and red lines are unchanged. See `SKILL.m
 § "Level-0 mode".
 
 ---
-*One skill package, four ecosystems. The only host-specific asset is the optional
+*One skill package, three verified ecosystems (plus OpenClaw, untested). The only host-specific asset is the optional
 `agent_created` field (WorkBuddy) and a thin `AGENTS.md` (Codex/clone routing) —
 everything else is the same plain-Markdown standard.*

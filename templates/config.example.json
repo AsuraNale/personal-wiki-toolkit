@@ -46,5 +46,5 @@
     "threshold": { "value": 0.7, "decided_by": "default-accepted" },
     "keeper": { "value": true, "decided_by": "user-selected" }
   },
-  "toolkit_version": "0.1.2"
+  "toolkit_version": "0.1.3"
 }

@@ -52,8 +52,15 @@ Collect, in whatever order the conversation allows:
    they will ever see. Accepting a stated default is a decision; never being told
    is not.
 5. **Keeper?** Default yes: a named librarian role with written duties
-   (`references/keeper.md`). If the user will only ever chat casually with
-   the library, they can skip it.
+   (`references/keeper.md`). **This is the library's maintainer, not a chat
+   persona** — it is who decides what gets promoted, notices what has gone stale,
+   and reports what changed. A library with nobody tending it starts decaying the
+   day it is built, and nothing in the tooling will tell you.
+   If the user declines, **say that plainly** — "then the upkeep is yours: the
+   brief needs skimming and Silver needs clearing, or the library silts up" — and
+   record it as `keeper: {"value": false, "decided_by": "user-selected"}`. A
+   declined keeper is a decision the user made knowingly, not a step that quietly
+   didn't happen.
 
 **Artifact:** a filled `config.json` draft (schema:
 `templates/config.example.json`), shown to the user for one confirmation

@@ -65,7 +65,7 @@ Then **go look at your Desktop**:
 
 | | |
 |---|---|
-| ⏱️ **Time** | About **30–60 minutes**, and you're just watching for most of it |
+| ⏱️ **Time** | About **15–30 minutes**, and you're just watching for most of it |
 | 💰 **Cost** | Your AI subscription (above); the toolkit itself is **free and open source** |
 | ⌨️ **Coding** | **None** |
 
@@ -132,7 +132,8 @@ Then **watch it finish the first round** and confirm **data actually landed** (p
 - **🗃️ A data table** — every price it ever fetched, so you can ask "what's the lowest the 5070 hit in the last three months?"
 - **🤖 Automatic refresh** — fetches new prices on a schedule. ⚠️ **Needs local mode + Python** (see FAQ); without it, **it runs when you ask it to**.
 - **📋 A one-page maintenance guide (CARE.md)** — everything about day-to-day use
-- **👤 A librarian role** — when you want to know something, **open that folder with your AI assistant and just ask: "what's the lowest the 5070 hit last month?"** — it reads the library itself; you don't re-explain the background.
+- **👤 A librarian role** — **this is the library's maintainer, not just a convenience.** It watches what deserves keeping, what has gone stale, and what changed lately. Day to day you just ask it things — **open that folder with your AI assistant and say "what's the lowest the 5070 hit last month?"** — and it reads the library itself; you don't re-explain the background.
+  > ⚠️ **You can decline it — just know the trade:** without a librarian that upkeep is yours. **The library won't error; it will just quietly rot**, and you'll notice long after it started.
 
 ---
 
@@ -186,7 +187,7 @@ The core value isn't that it can fetch data — it's that **it doesn't paper ove
 
 - **✅ Every entry carries a source and a date** — "$609.99, source: this Newegg link, fetched 2026-07-14." **Data without a source doesn't get in.**
 - **✅ If it couldn't fetch, it says so** — **the most important rule here.** When a round fails on a network problem or a site restriction, it states plainly: **"this is a fetch failure, not an absence of new content."**
-  > **Why this matters**: a real case — a library had 8 sources configured; **7 of them had been fetching nothing for days without raising a single flag**, and the brief read perfectly normal ("nothing new today"). **Without this rule, nobody would ever have caught it.** "Couldn't fetch" and "genuinely unchanged" are different facts — blur them and your library rots while you have no idea.
+  > **Why this matters**: a real case — a library had 8 sources configured, and in one round **7 of them were blocked by the environment**. **The brief said so at the top** — this was a fetch failure, not a quiet news day. **Without that rule you'd have been handed a brief that read perfectly normal** ("nothing new today"), and nobody would have caught it. "Couldn't fetch" and "genuinely unchanged" are different facts — blur them and your library rots while you have no idea.
 - **✅ It doesn't invent** — anything uncertain is flagged "to verify" rather than padded with a guess. If the library doesn't have something, it says so.
 - **✅ Important things need your nod** — machine-filtered material waits in a draft area; only what you confirm becomes permanent. It doesn't add things on its own.
 - **✅ It won't touch files you already have** — **it won't change anything you wrote without your agreement**; it lists what it plans to do first, and acts once you confirm.

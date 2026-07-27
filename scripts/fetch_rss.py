@@ -15,9 +15,12 @@ Status discipline (see references/pipeline-discipline.md — a failed fetch is N
 empty result):
     ok         fetched and parsed, >=1 item
     empty      fetched and parsed fine, zero items (the source genuinely had nothing)
-    gap        permanent-looking problem (HTTP 4xx, unparseable feed) — fix the config;
-               retrying without a change won't help
-    failed     transient problem (HTTP 5xx, timeout, network) — retry next round
+    gap        permanent-looking problem (HTTP 4xx except 403/407/408/429, unparseable
+               feed) — fix the config; retrying without a change won't help
+    failed     transient problem (HTTP 5xx, 408/429, timeout, network) — retry next round
+    blocked    refused by policy (HTTP 403/407, or a proxy refusing the connection) —
+               allow the domain in the egress allowlist, or collect locally; retrying
+               never helps
 
 Compliance: stores title + link + summary + date only. Never full article text.
 
@@ -41,7 +44,7 @@ from datetime import datetime, timezone
 from email.utils import parsedate_to_datetime
 from pathlib import Path
 
-TOOLKIT_VERSION = "0.1.2"
+TOOLKIT_VERSION = "0.1.3"
 USER_AGENT = "personal-wiki-toolkit/%s (personal research; polite fetcher)" % TOOLKIT_VERSION
 TIMEOUT = 20
 SUMMARY_MAX = 300

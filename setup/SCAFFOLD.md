@@ -64,9 +64,26 @@ health unreadable in both directions — see `medallion.md` Shape B rule 3.
 **Level-0 mode** (either shape): `index.md` + `_pipeline/seen.md` replace the
 two .db files.
 
-Naming: keep the user's language for directory display names ONLY if the
-user asks; default to the ASCII names above (they survive every platform,
-shell, and sync tool — a lesson paid for in encoding bugs).
+### Naming: the user doesn't have to choose between readable and robust
+
+This used to be posed as a trade-off — readable names in the user's language, or
+ASCII names that survive every shell and sync tool. **It isn't one.** The two names
+live at different layers:
+
+| Layer | Name | Rule |
+|---|---|---|
+| **On disk** (paths, directories, filenames) | **ASCII**, lowercase, hyphenated | never negotiable — non-ASCII paths break on some shells, sync tools, and CI, and the breakage is intermittent, which is worse |
+| **On screen** (what the user reads) | **the user's own language** | always — in the note's frontmatter `title`, in `START-HERE.md`, in the index tables |
+
+So a topic the user calls 「加拿大房产」 becomes `notes/canada-property/`, and every
+note in it carries `title: 加拿大房产 — …`. The user reads their language everywhere
+it is displayed; the filesystem only ever sees ASCII.
+
+Why this is the right split: the index resolves a display name from
+`frontmatter title -> first H1 -> filename stem` (`references/storage.md`), so a
+title in the user's language is picked up automatically — the ASCII filename is
+only ever the last-resort fallback. **Give every note a real `title` and the
+question disappears.**
 
 ## 2. config.json
 

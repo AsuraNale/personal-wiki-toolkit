@@ -8,7 +8,8 @@ An **agent skill toolkit** that interviews you (or ingests your existing
 folders) to build a personal knowledge base from scratch — Markdown + SQLite
 dual-layer storage, an automated intelligence-collection pipeline,
 Medallion-tier curation, a librarian agent role, and QC rubrics. Works across
-**Claude Code, OpenClaw, Tencent WorkBuddy, and Codex** (any agent that can read
+**Claude Code, Tencent WorkBuddy, and Codex** — plus OpenClaw, which follows the
+same skill format but hasn't been run end-to-end (any agent that can read
 markdown and run scripts, really).
 
 📖 **Not a developer? Start with the [manual](MANUAL.md)** — a plain-language
@@ -80,7 +81,7 @@ Excellent projects exist for AI-assisted note vaults (notably
 claude-obsidian's guided vault setup). This toolkit's focus is different:
 **the library as a living system** — a structured dual-layer store with a
 *continuous collection pipeline*, *tiered curation discipline*, a *written
-librarian role*, and *audit rubrics*, portable across four agent ecosystems.
+librarian role*, and *audit rubrics*, portable across every agent ecosystem it has been run on.
 It grows every day and it can prove its own quality.
 
 ## Install as a native skill (optional — auto-triggering)
@@ -96,20 +97,38 @@ Details and per-platform caveats: `docs/compatibility.md`.
 
 ## Status
 
-**v0.1.2 — pre-1.0.** Content-complete and end-to-end validated on **four
-independent ecosystems** — Claude Code (local), WorkBuddy (Tencent; model-pluggable —
-that run used Zhipu GLM 5.1), Codex, and **Claude Code in the cloud** — each a fresh agent that built
-a working library from just this repo + a topic, unaided, in Level-0 *and*
-full-SQLite modes. Those runs surfaced refinements now folded in: robust Python
-detection (Store / sandbox alias traps), a hardened prompt-injection red line,
-numeric-honesty rules, Level-0 run-logs, a Level-0 write carve-out, data-type
-watchlist-scoping, and auto-append of raw data rows (0.1.1) — and, from the cloud
-run, the **local-vs-cloud split**: an optional cloud path with its mandatory
-egress-allowlist step, and rule 6 extended to cover policy denials (0.1.2). The
-0.1.1 fixes were independently re-validated by the cloud build, which read them
-and applied all three unprompted. **Still pre-1.0** — hardening continues before
-the 1.0 tag. Methodology distilled from three production libraries that ran for
-months with daily automation and independent QC.
+**v0.1.3 — pre-1.0.** Validated end-to-end on **three agent ecosystems** — Claude
+Code (local *and* cloud), Tencent WorkBuddy, and Codex — each a fresh agent that
+built a working library from just this repo plus a topic, unaided, in Level-0 *and*
+full-SQLite modes.
+
+**What 0.1.3 changed**, in one line each:
+
+- **It stops pretending.** A **Preflight** gate now runs before anything else and
+  ends with *the user* confirming a file appeared on *their* machine — because an
+  agent cannot prove from its own side that where it wrote is where the user looks.
+  A previous user finished a session believing a library had been built, inside an
+  assistant with no filesystem at all.
+- **It records who decided what.** An **Intake** gate writes the setup decisions
+  into `config.json` marked `user-typed` / `user-selected` / `default-accepted` —
+  and `agent-inferred` is not allowed anywhere. Accepting a stated default is a
+  decision; never being told is not.
+- **Tiers are a shape, not a law.** Bronze→Silver→Gold is for libraries that
+  adjudicate items; data libraries use Fact→Derived→Conclusion, where facts land
+  final on write. Forcing the tiers onto data stalls the library — with receipts.
+- **Rules that caused errors were fixed**: the QC threshold could be tuned until a
+  score looked good; dedup treated "tendering begins" and "breaks ground" as
+  duplicates; numeric honesty guarded digits but not the word *target* vs *achieved*.
+- **Answers can now be taken back.** A question answered from outside the library
+  files its sources as Bronze; if one is later dismissed, the keeper says so
+  unprompted — the first mechanism here that corrects something *already said*.
+- **Everything has a name**: `references/glossary.md` registers each model with its
+  scope, its enforcement point, every file that must change with it, and the
+  incident that produced it.
+
+**Still pre-1.0** — hardening continues before the 1.0 tag. Methodology distilled
+from production libraries that ran for months with daily automation and independent
+QC, and from a survey of 11 real libraries built with it.
 
 ## License
 

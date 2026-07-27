@@ -102,7 +102,8 @@ CREATE TABLE fetch_log (
 );
 ```
 
-The four statuses are the whole point of this table:
+The five statuses are the whole point of this table — **each implies a different
+fix**, which is why they are not collapsed:
 
 - `ok` — fetched and parsed, ≥1 item.
 - `empty` — fetched fine, **zero items** (the source genuinely had nothing). Fine.
@@ -111,6 +112,9 @@ The four statuses are the whole point of this table:
 - `failed` — **transient** (HTTP 5xx, 408/429 rate-limit, timeout, network).
   Retry next round. The items were *not fetched*, which is **not the same as
   "there were no items."**
+- `blocked` — **refused by policy** (HTTP 403/407, or a proxy refusing the
+  connection). Neither "nothing there" nor "retry later": allow the domain in the
+  egress allowlist, or collect locally. Retrying never helps.
 
 A production library once reported a whole data series as "empty" for weeks
 because one HTTP 504 was misread as emptiness. This table exists so that can't
@@ -124,6 +128,10 @@ average away.
 CREATE TABLE notes (
     path     TEXT PRIMARY KEY,      -- layer-3 dedup: relative path, forward slashes on ALL platforms
     title    TEXT,                  -- frontmatter title -> first H1 -> filename stem
+                                   -- ^ this chain is why paths can stay ASCII while the
+                                   --   user still reads their own language: give the note a
+                                   --   `title` and the filename is never what gets shown
+                                   --   (SCAFFOLD.md § Naming)
     category TEXT,                  -- which configured dir it came from: notes | briefs | inbox
     tags     TEXT,                  -- comma-joined frontmatter tags
     created  TEXT,                  -- frontmatter date/created (the author's claim)
@@ -144,6 +152,25 @@ CREATE TABLE notes (
 
 ## Schema conventions (carried over from three production libraries)
 
+0. **Record how good a source is, in bands — not as a yes/no.** The existing
+   `*_reliable` flags answer "is this value usable at all", which is a different
+   question from "how much should I trust where it came from". Collapsing the
+   second into a boolean loses the distinction that matters most in practice:
+   an official filing and a forum post are both "reliable=1".
+
+   When a library mixes source qualities, add a discrete band — and **store the
+   band, never a computed score**, so it stays auditable:
+
+   ```sql
+   source_type TEXT   -- official | primary | reputable-secondary | aggregator | user-reported
+   ```
+
+   Rules: **carry it into anything you display** (a number from an aggregator
+   shown next to one from an official filing, with no visible difference, is a
+   misrepresentation); **never average across bands** into a single blended
+   figure; and when two bands disagree, **show both** and say which is which
+   rather than silently preferring one. Add the column only when the library
+   actually mixes bands — a single-source library gains nothing from it.
 1. **PK = idempotency.** Every table's primary key is chosen so a re-run
    upserts instead of duplicating (`url` / `url` / `path`). "Run it twice" must
    always be safe — this is the property that lets fetch, apply, and index all

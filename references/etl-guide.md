@@ -59,13 +59,19 @@ data library specifically:
    Never store only a derived number you can't re-derive.
 3. **Audit columns, always:** `source`, `fetched_at`, `snapshot_date`. When a
    number looks wrong three weeks later, the row must say where it came from and when.
-4. **Reliability flags over silent exclusion.** When a value can't be trusted
+4. **Trust is a band, not a boolean.** `*_reliable` says whether a value is
+   usable; it does not say how much the *source* is worth. If your library mixes
+   official filings with aggregators or user reports, record a `source_type` band
+   (`references/storage.md`) and **show it wherever you show the number** — two
+   figures displayed identically are a claim that they are equally solid. Never
+   average across bands.
+5. **Reliability flags over silent exclusion.** When a value can't be trusted
    (missing input, a source returned a placeholder, an identity that didn't hold),
    keep the row and flag it (`*_reliable = 0`) rather than dropping it — visible
    doubt beats invisible absence. (A production library learned this when a balance
    sheet's assets = liabilities + equity didn't hold for a few entities: flagging
    beat hiding.)
-5. **The empty/failed distinction is schema, not prose** (see
+6. **The empty/failed distinction is schema, not prose** (see
    `pipeline-discipline.md`): a fetch log with a `status` column
    (ok / empty / gap / failed / blocked) so "this series has no data" can never be
    confused with "the fetch failed" — or with "our egress policy refused to go there."
