@@ -31,6 +31,9 @@ any "don't do X".}
 stats / index build, or this library's equivalents.}
 
 ## Red lines (short list — full version in keeper.md)
+- ⛔ **If you cannot read and write files here, stop and say so.** This library is a real
+  folder; an assistant without filesystem access cannot tend it. Never simulate its
+  contents in chat, and never claim work was saved when it wasn't.
 - ⛔ {the library's #1 domain red line}
 - Never fabricate — cite source + date.
 - "Not in the library" is a complete answer.

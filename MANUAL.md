@@ -54,6 +54,13 @@ Then **go look at your Desktop**:
 - The folder **is actually there** → you're good (delete it once you've looked)
 - **Nothing appeared**, or it starts explaining that it can't access your file system → it won't work; switch to one from the table above
 
+> **The toolkit runs this same check from its side.** A properly working assistant
+> will, before building anything, tell you the full path it's about to use, drop a
+> small `.pwt-capability-check` file there, and **ask you to go look at it**. If
+> yours skips straight to building — ask it to run its Preflight check first. An
+> assistant that says "done!" without ever asking you to look at anything is the
+> exact failure this check exists to catch.
+
 ### What to expect
 
 | | |

@@ -152,7 +152,7 @@ before building one.
 | **Category** | **Gate** |
 | **① Evidence required** ⭐ | **An artifact the user has looked at with their own eyes**, in a location the user knows |
 | **② Triggers before** | everything — before `find_root()`, before reading config |
-| **③ How it is checked** | three stages: echo the absolute path → write-read-compare probe → **user confirms** |
+| **③ How it is checked** | three stages, each catching a different failure: **1** state the absolute path (E3 if none) → **2** write `.pwt-capability-check`, read back, compare verbatim (E1 unreadable/mismatched, E2 refused) → **3** ⭐ **the user opens that path and confirms the file is there** (E4 if not). Probe is deleted only *after* stage 3 |
 | **④ On failure** | **hard stop** + tell them what to switch to. ⛔ Never degrade to "I'll simulate one in chat" |
 | **Applies to** | every library type |
 | **Spec lives in** | `SKILL.md` (v0.1.3) |
@@ -172,7 +172,7 @@ before building one.
 | **Category** | **Gate** |
 | **① Evidence required** ⭐ | **The user's own words / selections written into `config.json`**, each marked with who decided it |
 | **② Triggers before** | scaffold (and after Preflight) |
-| **③ How it is checked** | no key decision may be marked `agent-inferred` |
+| **③ How it is checked** | every setup choice carries `decided_by`. **`agent-inferred` anywhere → stop**; `default-accepted` outside cadence/threshold/keeper → stop. `default-accepted` is only truthful if you stated the default *and its effect* |
 | **④ On failure** | **do not scaffold** — go back and ask |
 | **Applies to** | every library type |
 | **Spec lives in** | `setup/INTERVIEW.md` + `setup/IMPORT.md` (v0.1.3) |

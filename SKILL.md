@@ -71,35 +71,75 @@ this point is theatre. **This has actually happened**: a user finished a session
 believing a library had been built, in an assistant that had no filesystem access
 at all.
 
-Three stages, in order:
+Three stages, in order. Each one catches a different failure:
 
-1. **Say where.** State the **absolute path** you are about to build in, and let
-   the user see it before you write anything. This alone catches two of the four
-   failure modes — a sandbox path that isn't their machine, and a working
-   directory that isn't the folder they meant.
-2. **Write, read back, compare.** Create a small file, read it back, and compare
-   the content verbatim. This catches "no filesystem at all" and "read-only".
-3. ⭐ **Have the user look.** Ask them to confirm the file is really there, at
-   that path, on their machine.
+**1 — Say where.** State the **absolute path** you are about to build in, before
+writing anything:
 
-**Stage 3 is not politeness — it is the only stage that can work.** Stages 1–2
-run entirely inside your own environment, so they pass happily inside a cloud
-sandbox whose files never reach the user at all. **You cannot prove from your own
-side that "where I wrote" is "where the user looks."** Only the user can close
-that gap.
+> "I'll build the library in `C:\Users\you\Desktop\my-kb`."
+
+No target directory → **E3**. *(Catches: you are about to build in a folder the
+user didn't mean — they will say so the moment they read the path.)*
+
+**2 — Write, read back, compare.** Create `.pwt-capability-check` in that
+directory with a known string, read it back, compare **verbatim**.
+
+Can't read it back, or content differs → **E1**. Tools exist but the write was
+refused → **E2**. *(Catches: no filesystem at all; read-only.)*
+
+⚠️ **Do not delete it yet.**
+
+**3 ⭐ — Have the user look.**
+
+> "Please open `<absolute path>` and tell me: is there a file called
+> `.pwt-capability-check` in it?"
+
+User can't see it → **E4**. User confirms → **passed; now delete the probe** and
+continue (to Level-0 detection, then Intake).
+
+**Stage 3 is not politeness — it is the only stage that can work.** Stages 1–2 run
+entirely inside your own environment, so they pass happily inside a cloud sandbox
+whose files never reach the user's computer. **You cannot prove from your own side
+that "where I wrote" is "where the user looks."** That is not caution; it is a
+logical impossibility. Only the user closes that gap.
+
+### When it fails
+
+| | Situation | Tell the user |
+|---|---|---|
+| **E1** | No file read/write tools | "I **can't read or write files** here. This toolkit builds a real folder on your computer, so it needs an assistant with filesystem access." + where to go, below |
+| **E2** | Tools exist, write refused | "I have file tools but the write was **refused** (permissions or sandbox). That's not a capability problem — grant access to the folder and we can retry." |
+| **E3** | No working directory | "I need a **working directory** first. Use 'open folder' to point me at an empty one, then we can start." |
+| **E4** 🆕 | Probe passed, **user can't see the file** | "It succeeded on my side, but **you can't see it** — so I'm not writing to your computer (probably a cloud container or sandbox). **A library I build here wouldn't reach you**, so I'm stopping." + where to go, below |
+
+**Where to go** (E1 / E4): **Claude Code** desktop · **ChatGPT desktop app** in
+Codex mode (Plus is enough — the *desktop* app, not the browser) · **Tencent
+WorkBuddy**. Not: browser chat, phone apps.
 
 ### Red lines
 
-- **Fail → hard stop.** Say plainly that this assistant cannot build the library,
-  and what would work instead. ⛔ Never degrade to "I'll simulate one in this
-  chat" or "I'll write it out and you can save it" — that is the exact failure
-  this Gate exists to prevent.
-- **A passing probe is not enough.** Until the user has confirmed stage 3, you
-  may not say the library exists. "It says it built it" is how the original
-  failure was reported.
+- **Fail → hard stop.** ⛔ Never "simulate" the library in chat, never produce
+  anything that *looks like* library output (briefs, notes, an index, a
+  fetch_log), never say the library exists, never carry on with the rest of this
+  file.
+- **A passing probe is not enough.** Until the user confirms stage 3, you may not
+  say the library was built. *"It said it built it"* is, verbatim, how the
+  original failure was reported.
 - **Never delete the evidence before the user has seen it.** A file you wrote,
-  read, and removed proves nothing — that closed loop is what
+  read, and removed proves nothing — that closed loop is exactly what
   `references/qc-rubric.md` rules out: verify from the source, not from the claim.
+- **If the user pushes back** — "just build it anyway" — **still refuse.**
+
+**Why "doing your best anyway" is the harmful option here.** Your default pull is
+to help. Resist it: without a filesystem you would produce a library that *looks*
+real and isn't. The user walks away believing they have a traceable knowledge base
+when what they actually have is one-off chat text whose "sources" you recalled
+from memory — **nothing in it can be traced back**. That is not a hypothetical;
+it is what a real user reported.
+
+The one thing you may offer: answer their question directly, **while saying
+plainly that this is not a library** — nothing is saved, and sources aren't
+guaranteed. Make clear it is not a product of this toolkit.
 
 ## Start here: route the request
 
@@ -231,6 +271,11 @@ SKILL.md because they must never be skipped:
    own memory file — see SCAFFOLD step 3.)
 
 ## Level-0 mode (no Python available)
+
+> **Level-0 still requires a filesystem, so it still comes after Preflight.** It is
+> the fallback for "no Python", **not** for "no place to write" — Level-0 itself
+> writes `index.md` and `_pipeline/seen.md`. Missing Python downgrades the library;
+> missing a filesystem means there is no library.
 
 **First, make sure Python is really absent — don't false-negative into Level-0.**
 On Windows, bare `python` is often a Microsoft Store *alias* that prints a
