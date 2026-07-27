@@ -125,5 +125,7 @@ view or a health card**, not a curated reading list. The keeper (data preset —
 `references/keeper.md`) answers with **numbers that cite their source table +
 snapshot date + definition**, never computed from memory, and states known blind
 spots up front (e.g. "field X is blocked by the source, industry-wide"). See
-`examples/etl-kb/` for a minimal end-to-end instance: a free public API → a small
-SQLite schema → a query the keeper can answer.
+`examples/etl-kb/` for a runnable end-to-end instance: a free public API → a schema
+that keeps revision history → windowed, resumable backfill → a recomputable
+aggregate → the library's own QC. It also demonstrates the trap this chapter warns
+about, with a verified before/after: **idempotent does not mean "ignore updates".**

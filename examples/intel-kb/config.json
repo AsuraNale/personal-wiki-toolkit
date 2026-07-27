@@ -1,21 +1,24 @@
 {
-  "name": "espresso-log",
+  "name": "vuln-watch",
   "type": "intel",
   "language": "en",
   "topics": [
-    { "key": "grinders", "label": "Grinders", "keywords": ["espresso grinder", "burr grinder", "grinder alignment"] },
-    { "key": "machines", "label": "Machines", "keywords": ["espresso machine", "flow control", "PID"] },
-    { "key": "technique", "label": "Technique", "keywords": ["espresso dialing in", "puck prep", "pressure profiling"] },
-    { "key": "beans", "label": "Beans & roasts", "keywords": ["single origin espresso", "roast for espresso"] }
+    { "key": "exploited", "label": "Actively exploited", "keywords": ["actively exploited", "exploited in the wild", "zero-day", "KEV", "emergency directive"] },
+    { "key": "critical", "label": "Critical vulnerabilities", "keywords": ["CVE", "critical vulnerability", "remote code execution", "RCE", "authentication bypass", "privilege escalation"] },
+    { "key": "supply-chain", "label": "Supply chain", "keywords": ["supply chain attack", "malicious package", "npm package", "PyPI", "dependency confusion", "typosquatting"] },
+    { "key": "advisories", "label": "Vendor advisories & patches", "keywords": ["security advisory", "security update", "patch Tuesday", "out-of-band patch"] }
   ],
   "sources": [
-    { "kind": "rss", "name": "home-barista", "url": "https://www.home-barista.com/feed.example.xml", "topic": "technique" },
-    { "kind": "rss", "name": "coffee-blog", "url": "https://example-coffee-blog.com/feed.xml", "topic": "beans" },
-    { "kind": "hn", "name": "hn-espresso", "query": "espresso", "min_points": 40 }
+    { "kind": "rss", "name": "cisa-advisories", "url": "https://www.cisa.gov/cybersecurity-advisories/all.xml", "topic": "advisories" },
+    { "kind": "rss", "name": "bleepingcomputer", "url": "https://www.bleepingcomputer.com/feed/", "topic": "exploited" },
+    { "kind": "rss", "name": "krebs-on-security", "url": "https://krebsonsecurity.com/feed/", "topic": "exploited" },
+    { "kind": "rss", "name": "the-hacker-news", "url": "https://feeds.feedburner.com/TheHackersNews", "topic": "critical" },
+    { "kind": "rss", "name": "schneier", "url": "https://www.schneier.com/feed/atom/", "topic": "critical" },
+    { "kind": "hn", "name": "hn-vulnerability", "query": "vulnerability", "min_points": 50 }
   ],
   "thresholds": { "keep": 0.7 },
   "cadence": "daily",
-  "keeper": { "enabled": true, "name": "Crema" },
+  "keeper": { "enabled": true, "name": "Sentry" },
   "demand_tracking": { "enabled": true, "propose_threshold": 3 },
   "paths": { "notes": "notes", "briefs": "briefs", "inbox": "inbox", "pipeline": "_pipeline" },
   "toolkit_version": "0.1.2"
