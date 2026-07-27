@@ -86,3 +86,19 @@ State what was checked, what passed, what failed **with the evidence**, and
 what changes as a result (threshold tweak, curation.md re-read, keeper.md
 amendment). A QC round that ends in "all good 👍" with no numbers attached
 did not happen.
+
+**Use `templates/qc-report.template.md`** — it has a row per check with a column
+for the actual number or quote, a place to record what changed, and an explicit
+`skipped` verdict so a check you didn't run can't quietly read as one that passed.
+
+## ⚠️ "The file was produced" is not "the file is correct"
+
+When a check produces a rendered artifact — an exported document, a generated
+index, a chart, a converted file — **open it and look**. Generation succeeding
+says nothing about the content being right:
+- **follow the links** (conversion is where links get mangled, split, or silently
+  re-pointed)
+- check the numbers survived formatting (thousands separators, dates, currency)
+- confirm it isn't truncated at the end
+
+Report what you *looked at*, not what you *generated*.

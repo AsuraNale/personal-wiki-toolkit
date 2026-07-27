@@ -212,7 +212,7 @@ the user pulls it back, and you can likely only push `claude/*` branches.
 | `references/medallion.md` | Before you first write anything into a library: the Bronze/Silver/Gold tiers and promotion rules |
 | `references/curation.md` | Before you judge/filter collected items, and whenever you design search keywords or dedup |
 | `references/keeper.md` | When the user wants a librarian role, and at handoff time — also covers answering questions the library can't answer, and going back to correct such an answer once its sources have been judged |
-| `references/qc-rubric.md` | When you or the user wants to verify library quality; also read before claiming any setup step "done" |
+| `references/qc-rubric.md` | When you or the user wants to verify library quality; also read before claiming any setup step "done" | Report the result with `templates/qc-report.template.md` — a QC round with no evidence attached did not happen.
 | `references/pipeline-discipline.md` | Before you write or schedule any fetch automation |
 | `references/storage.md` | When designing the SQLite schema or deciding what goes in Markdown vs the index |
 | `references/etl-guide.md` | Data/ETL-type libraries (path 3) |
@@ -344,3 +344,16 @@ Not a note-taking app, not a SaaS, not an Obsidian plugin, and not magic: the
 quality of judgment depends on you, the hosting agent — which is why
 `references/qc-rubric.md` exists, so the user can check your work. Be the kind
 of librarian who invites the audit.
+
+**Not a document converter.** The library is Markdown plus a SQLite index. You can
+*read* a PDF/docx/spreadsheet to get material into a note, but producing polished
+documents in other formats is not what this builds, and the toolkit has no
+machinery for it. If the user wants a formatted deliverable, say plainly that this
+is outside the toolkit and treat it as a separate job.
+
+⚠️ **And if you do generate any file outside plain Markdown, check the links you
+put in it.** Links written into converted formats break in ways that don't happen
+in Markdown — mangled by the conversion, split across lines, or silently pointing
+somewhere else. **Open the file you produced and follow the links** before handing
+it over. "The file was generated" is not "the file is correct" — see
+`references/qc-rubric.md`.

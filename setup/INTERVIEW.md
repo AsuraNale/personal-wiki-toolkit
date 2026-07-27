@@ -155,7 +155,12 @@ to SQLite.
    instantiate `templates/keeper-instructions.template.md` as `keeper.md` →
    first-run rite: verify the library map against the REAL library → hand off).
    Role definition: `references/keeper.md`.
-2. Give the user the **one-page care guide** (write it into the library as
+2. Write **`START-HERE.md`** from `templates/start-here.template.md` — the file
+   the owner opens when they've forgotten how this works. ⚠️ **Test every
+   suggested question against the real library first**: one that returns nothing
+   teaches them the library is useless. For ≥3 topics also instantiate
+   `templates/notes-index.template.md`.
+3. Give the user the **one-page care guide** (write it into the library as
    `CARE.md`, in their language):
    - daily/whenever: skim the new brief (2 min);
    - promote what deserves permanence, dismiss what doesn't — with reasons;
@@ -163,11 +168,11 @@ to SQLite.
      demand-board candidates?" (coverage + emergent-topic proposals);
    - monthly: skim `references/qc-rubric.md` checks — or just ask the agent
      to run a self-audit and show evidence.
-3. Remind them: the toolkit repo can be deleted; the library is
+4. Remind them: the toolkit repo can be deleted; the library is
    self-describing via its own memory file. Updates to the toolkit can be
    re-applied by re-reading it against an existing library (idempotent
    scaffold).
-4. State honestly what was NOT set up (e.g. schedule not registered yet, or
+5. State honestly what was NOT set up (e.g. schedule not registered yet, or
    Level-0 mode) and what the user must do for it.
 
 Done means: the user watched the loop run once, touched promote/dismiss with

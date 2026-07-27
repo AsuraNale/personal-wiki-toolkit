@@ -178,6 +178,8 @@ If demand-tracking is on, the keeper logs out-of-library queries with
 - [ ] schedule registered by user, or manual mode acknowledged
 - [ ] if keeper enabled: `keeper.md` instantiated, type preset chosen, top red line
       captured as phrasing, first-run rite done (map verified against the real library)
+- [ ] `START-HERE.md` written from `templates/start-here.template.md`, and every
+      suggested question in it was **actually tried** against this library
 - [ ] **Intake recorded**: `config.json` carries `$intake`, and nothing in it is
       `agent-inferred` (see `setup/INTERVIEW.md` § Intake)
 - [ ] **Shape B only — the human loop is actually wired**, both halves:
