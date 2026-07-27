@@ -252,6 +252,13 @@ SKILL.md because they must never be skipped:
    not report** (no misattribution), and don't let an estimate exceed the range
    the source gave. No reliable source yet → mark it "to verify", don't fill the
    gap with a guess.
+   ⚠️ **A number keeps its meaning, not just its digits.** The same figure can be
+   a *target*, a *forecast*, an *approved budget*, or an *achieved result* — and
+   dropping that word turns a plan into an accomplishment without altering a single
+   digit. "The government **aims to** build 30,000 units" is not "30,000 units
+   **built**"; "**expected to** reach $2B" is not "reached $2B". **Carry the status
+   word from the source into your note**, and when the source is vague about which
+   one it is, say that instead of picking the stronger reading.
 3. **Judge substance, not keywords.** An item mentioning the user's keywords
    is not therefore relevant. Score what the item actually IS. When unsure,
    score LOW (the user can always rescue a false negative from Bronze; a false

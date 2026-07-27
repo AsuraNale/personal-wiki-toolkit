@@ -24,8 +24,8 @@ Run monthly, or whenever the user doubts the library. ~15 minutes.
 
 | # | Check | How | Pass bar |
 |---|---|---|---|
-| A1 | **Judgment calibration** | User blind-scores 10 random machine-judged items (mix of kept + rejected), compare | agreement ≥ ~80%; misses analyzed (keyword-bait pattern? threshold drift?) |
-| A2 | **No fabrication** | Pick 5 random Gold notes/brief entries → follow every source link | every claim traceable to its source; dead links flagged, not silently kept |
+| A1 | **Judgment calibration** | User blind-scores 10 random machine-judged items (mix of kept + rejected), compare | agreement ≥ ~80%; misses analyzed (keyword-bait pattern? threshold drift?). ⛔ **Diagnose before you touch the threshold** — see the note below the table |
+| A2 | **No fabrication** | Pick 5 random Gold notes/brief entries → follow every source link | every claim traceable to its source; dead links flagged, not silently kept. **Also check the status words**: a figure the source called a *target/forecast* must not read as *achieved* in the note — same digits, different claim |
 | A3 | **Noise floor** | Read the latest 2 briefs cold | ≥⅔ of entries genuinely worth the owner's attention; if not, judging went soft (→ curation.md) |
 | A4 | **Flow** | `pipeline.py stats`: Silver ages | nothing waiting > 2 weeks; dismissals carry reasons |
 | A5 | **Dedup** | stats: duplicate-key hits across layers | no repeated story surfacing as "new" twice |
@@ -59,6 +59,26 @@ previous session's work:
    without a reason? any owner-authored file with machine edits?
 5. Grade the *system*, not the day: one bad judgment is noise; a pattern
    (every miss is keyword-bait; every "done" lacks evidence) is the finding.
+
+## ⛔ Never tune the threshold to make a score go up
+
+A1 can be "passed" by lowering the keep-threshold until agreement improves. That
+changes the number without changing the judging, and it makes the library worse
+while the report looks better.
+
+**Fixed order when A1 fails:**
+
+1. **Read the misses.** What do they have in common — keyword-bait? one source
+   dominating? a topic whose keywords stopped matching how people write?
+2. **Fix the judging**: sharpen the topic keywords, re-read `curation.md`, correct
+   the anchor values you were using.
+3. **Re-score the SAME items** and compare against the same human scores.
+4. **Only then**, if the shape of the disagreement genuinely says so, adjust the
+   threshold — and **record what you changed and why** in the QC report.
+
+**⛔ Never re-run a check with an adjusted parameter and report the second number
+as if it were the first.** A metric moved by changing the measurement is not an
+improvement; if the threshold changed, the QC report says so next to the score.
 
 ## Reporting QC results
 

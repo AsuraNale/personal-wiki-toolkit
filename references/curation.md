@@ -52,6 +52,10 @@ you never write the database yourself.
    range the source gave. No reliable source → "to verify", not a confident guess.
    (Matters most for structured/price libraries — the table looks authoritative,
    so a padded number reads as fact.)
+   **And keep the status word.** Target / forecast / approved / achieved are
+   part of the number's meaning — a figure copied without it converts a plan
+   into a result while every digit stays correct. If the source doesn't make
+   the status clear, write that it is unclear; don't resolve it upward.
 
 Calibration exercise (recommended monthly, 10 minutes): user re-judges 10
 random machine-judged items blind; agreement below ~80% means the criteria
@@ -69,6 +73,32 @@ The scripts enforce layers 1 and 3 mechanically. Layer 2 produces
 *candidate* duplicates — the verdict "same story or genuinely different
 angle?" is yours. Two writeups of one announcement = duplicate (keep the
 better); two analyses with different conclusions = both can live.
+
+### ⚠️ A later stage of the same story is NOT a duplicate
+
+The layer-2 key is a normalized *title*, so it flags things that merely read
+alike. But a project moving forward produces near-identical titles at each step:
+
+> "Metro line X **tendering begins**" → "Metro line X **breaks ground**" →
+> "Metro line X **opens**"
+
+Those are **three different facts about three different dates**, and dropping the
+later ones as duplicates is how a library silently stops tracking the very thing
+it was built to follow — the timeline flatlines while the dedup stats look healthy.
+
+**Before calling two items duplicates, check whether they differ in:**
+- **stage / status** (proposed → approved → started → completed → cancelled)
+- **date of the underlying event** (not the publication date)
+- **the numbers** (a revised figure is new information, not a repeat)
+
+If any of those differ, **keep both** — and say in the `one_line` which stage this
+one is, so the timeline stays readable.
+
+**Judge sameness on content, not on the title.** Two reports of one event with
+different wording are duplicates; the same wording pattern describing different
+events is not. When the title is all you have and the answer is unclear, **keep
+both** — a duplicate in the library is visible and removable, a wrongly dropped
+update is neither.
 
 ## Echo-chamber defense (for keyword evolution)
 
