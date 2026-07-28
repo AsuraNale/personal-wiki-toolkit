@@ -11,7 +11,7 @@ Read this file first. It tells you what this library is and how to keep it.
   someone should *do* this week, not by being newsworthy.
 - **Owner:** the person whose folder this is. **The judgment calls are theirs, not yours.**
 - **Keeper:** `Sentry` — see `keeper.md` for the full role.
-- **Created:** 2026-07-20 · **Language:** English · **Toolkit:** 0.1.2
+- **Created:** 2026-07-20 · **Language:** English · **Toolkit:** 0.1.3
 
 ## Structure (quick map)
 

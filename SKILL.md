@@ -212,7 +212,7 @@ the user pulls it back, and you can likely only push `claude/*` branches.
 | `references/medallion.md` | Before you first write anything into a library: the Bronze/Silver/Gold tiers and promotion rules |
 | `references/curation.md` | Before you judge/filter collected items, and whenever you design search keywords or dedup |
 | `references/keeper.md` | When the user wants a librarian role, and at handoff time — also covers answering questions the library can't answer, and going back to correct such an answer once its sources have been judged |
-| `references/qc-rubric.md` | When you or the user wants to verify library quality; also read before claiming any setup step "done" | Report the result with `templates/qc-report.template.md` — a QC round with no evidence attached did not happen.
+| `references/qc-rubric.md` | When you or the user wants to verify library quality; also read before claiming any setup step "done" — report the result with `templates/qc-report.template.md`, because a QC round with no evidence attached did not happen |
 | `references/pipeline-discipline.md` | Before you write or schedule any fetch automation |
 | `references/storage.md` | When designing the SQLite schema or deciding what goes in Markdown vs the index |
 | `references/etl-guide.md` | Data/ETL-type libraries (path 3) |
