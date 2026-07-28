@@ -78,15 +78,26 @@ data library specifically:
 
 ## Raw observations auto-append; only analysis is curated
 
-Medallion still applies — but map it correctly for data. Each collection round
-**appends raw observation rows automatically**: a price snapshot is a timestamped,
-sourced Bronze/Silver *fact*, not a Gold claim, so it goes straight into the table
-on every run. Do NOT gate raw snapshots behind human promotion. What IS
-human-gated is the **curated conclusion** — "this is a good buy window", a chosen
-long-term watch item, an analysis note — that's Gold. A real build stalled its own
-price time-series by *proposing* snapshot `INSERT`s for the user to run each week
-instead of appending them; the table never grew a second data point. **Append the
-facts every round; curate the conclusions.**
+A data library is **Shape B — accumulation**, not the Bronze/Silver/Gold tiers.
+Its chain is **Fact → Derived → Conclusion**, and the full rules live in
+`references/medallion.md` § *Shape B — accumulation*. The short version:
+
+Each collection round **appends raw observation rows automatically**. A price
+snapshot is a timestamped, sourced **Fact** — it goes straight into the table on
+every run, final on write. **Do NOT gate raw snapshots behind human promotion**:
+there is no queue for them to wait in, and putting one there stops the library.
+What IS human-gated is the **Conclusion** — "this is a good buy window", a chosen
+long-term watch item, an analysis note. *That* is what a human decides to keep.
+
+A real build stalled its own price time-series by *proposing* snapshot `INSERT`s
+for the user to run each week instead of appending them; **the table never grew a
+second data point.** **Append the facts every round; curate the conclusions.**
+
+> ⚠️ **Don't reach for Bronze/Silver/Gold here.** Those tiers are Shape A
+> (adjudication: intel / import), where every item waits for a human verdict —
+> `references/medallion.md` scopes them explicitly. A data library that gets the
+> Shape A scaffold ends up with an empty Silver queue beside the table where its
+> real data actually accumulates.
 
 ## Fetching structured data
 

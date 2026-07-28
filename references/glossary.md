@@ -89,7 +89,7 @@ before building one.
 | **Applies to** | ⚠️ **Shape A only** (adjudication-type: intel / import). **Not** data/ETL libraries |
 | **Spec lives in** | `references/medallion.md` |
 | **Enforced in code by** | `scripts/pipeline.py` — `seen` / `silver` tables, `promote` / `dismiss` |
-| **Does NOT cover** | Shape B (§2) · how items are scored (§3 Curation) · fetch status (§4) |
+| **Does NOT cover** | Shape B · how items are scored (Curation) · fetch status (Fetch Honesty Protocol) |
 | **Referenced by** | **core:** `SKILL.md` · `README.md` · `references/{curation,etl-guide,storage,keeper,qc-rubric,cloud}.md` · `setup/{INTERVIEW,SCAFFOLD}.md` · `templates/{kb-agent-memory,keeper-instructions}.template.md` · `scripts/{pipeline,index_db}.py`<br/>**examples/tests:** `examples/intel-kb/*` · `examples/etl-kb/README.md` · `tests/test_pipeline.py` |
 | **Evidence** | Borrowed from data engineering's medallion architecture (`references/medallion.md`, opening section). **Its failure mode is documented**: applied to a data library, Silver silts up — one production recall library sat at 21 Silver rows, 0 promoted / 0 dismissed, while its real table accumulated 567 records around it; the whole scaffold was deleted in the rewrite |
 | **Status** | `active` |
@@ -103,7 +103,7 @@ before building one.
 | **Definition** | Fact (auto-appended, **final on write**) → Derived (recomputable, **never hand-edited**, not a source of truth) → Conclusion (human-authored = Gold) |
 | **Category** | Structural model |
 | **Applies to** | data / ETL libraries |
-| **Spec lives in** | 🔴 **nowhere yet** — v0.1.3 writes the first one. Current basis: `references/etl-guide.md` § Raw observations auto-append; only analysis is curated (the idea, without the structure) |
+| **Spec lives in** | `references/medallion.md` § *Shape B — accumulation* (written in v0.1.3). `references/etl-guide.md` § *Raw observations auto-append* carries the data-library framing and points here |
 | **Enforced in code by** | nothing. Data libraries do not run `pipeline.py` at all (`examples/etl-kb` references it zero times; `SKILL.md` § Start here: route the request — "there is no one-click scaffold") |
 | **Does NOT cover** | relevance scoring · per-row human promotion (**explicitly forbidden here**) |
 | **Referenced by** | **core:** `references/etl-guide.md` § Raw observations auto-append; only analysis is curated<br/>**examples:** `examples/etl-kb/` |
@@ -135,10 +135,10 @@ before building one.
 | **Definition** | Every fetch lands in exactly one of five states — `ok / empty / gap / failed / blocked` — **each of which implies a different fix** |
 | **Category** | Status protocol |
 | **Applies to** | ⭐ **every library type.** This is the one thing with cross-type code-reuse evidence |
-| **Spec lives in** | `references/pipeline-discipline.md` §1 |
+| **Spec lives in** | `references/pipeline-discipline.md` § *A failed fetch is not an empty result* |
 | **Enforced in code by** | `scripts/fetch_rss.py` (`FetchGap` / `FetchFailed` / `FetchBlocked` + two-layer classification) · the `fetch_log` table · the health banner in `scripts/pipeline.py` · assertions in `tests/test_pipeline.py` |
 | **Does NOT cover** | content quality · relevance · tiering |
-| **Referenced by** | **core:** `SKILL.md` (rule 6) · `MANUAL.md` · `references/{pipeline-discipline,etl-guide,medallion,storage,cloud}.md` · `setup/SCAFFOLD.md` · `scripts/{fetch_rss,pipeline}.py`<br/>**examples/tests:** `examples/etl-kb/{fetch_quakes.py,CLAUDE.md,keeper.md}` ← **the cross-type reuse evidence** · `examples/intel-kb/*` · `tests/test_pipeline.py` |
+| **Referenced by** | **core:** `SKILL.md` (the failed-fetch rule) · `MANUAL.md` · `references/{pipeline-discipline,etl-guide,medallion,storage,cloud}.md` · `setup/SCAFFOLD.md` · `scripts/{fetch_rss,pipeline}.py`<br/>**examples/tests:** `examples/etl-kb/{fetch_quakes.py,CLAUDE.md,keeper.md}` ← **the cross-type reuse evidence** · `examples/intel-kb/*` · `tests/test_pipeline.py` |
 | **Evidence** | A cloud round lost **7 of 8 sources** to egress policy and still "succeeded" — only the health banner revealed the brief had been built from the single source that happened to be allowed. Before `blocked` existed, that same denial was filed as `gap`, i.e. the user was told to fix a config that was already correct |
 | **Status** | `active` |
 | **Version history** | v0.1.1 four states → **v0.1.2 adds `blocked`** (policy refusal ≠ "nothing there" ≠ "retry later") |
@@ -158,7 +158,7 @@ before building one.
 | **Spec lives in** | `SKILL.md` (v0.1.3) |
 | **Enforced in code by** | nothing — it must run before any script can (`find_root()` raises `SystemExit(2)` without a config, and the existing `.selftest-probe` inside `cmd_selftest()` sits *after* its `if config is not None:` guard) |
 | **Does NOT cover** | whether Python exists (that is Level-0 detection) |
-| **Referenced by** | **core:** `SKILL.md` · `setup/{INTERVIEW,IMPORT,SCAFFOLD}.md` · `MANUAL.md` § How to check the assistant you have (the user-facing version, which already existed) |
+| **Referenced by** | **core:** `SKILL.md` · `README.md` · `MANUAL.md` § *How to check the assistant you have* (the user-facing version, which predates the gate) · `MANUAL.zh.md` · `CHANGELOG.md` / `CHANGELOG.zh.md`. ⚠️ **Not** `setup/` — nothing there mentions it; Preflight runs before any setup file is read |
 | **Evidence** | A user ended a session believing a library had been built, in an assistant with no filesystem at all. **And the naive fix fails too**: a write-read-compare probe passes inside a sandbox/cloud container whose files never reach the user's machine — an agent cannot prove from its own side that "where I wrote" equals "where the user looks" |
 | **Status** | 🆕 v0.1.3 |
 | **Version history** | v0.1.3. First draft used probe-only self-verification; **rejected for violating `references/qc-rubric.md` § The prime principle** |
