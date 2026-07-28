@@ -120,7 +120,7 @@ before building one.
 | **Category** | Judgment protocol |
 | **Applies to** | Shape A (adjudication). Data libraries validate on write instead — a different thing |
 | **Spec lives in** | `references/curation.md` (**already complete — it was simply never registered**) |
-| **Enforced in code by** | `scripts/pipeline.py` — the `how_to_judge` handoff text (`:209-211`), the judgment contract `{url, relevance, one_line, topic}` (`:404-405`), the threshold gate (`:432/:433`) |
+| **Enforced in code by** | `scripts/pipeline.py` — the `how_to_judge` handoff text and the judgment contract `{url, relevance, one_line, topic}`, both written by `write_pending()`; the threshold comparison in `cmd_apply()` |
 | **Does NOT cover** | the threshold **value** (that is `config.thresholds.keep`) · **auditing the library's quality** (that is `qc-rubric.md` — do not conflate the two; this is why the proposed name "Curation Rubric" was rejected) |
 | **Referenced by** | **core:** `SKILL.md` · `references/{medallion,keeper,qc-rubric,storage}.md` · `setup/{INTERVIEW,SCAFFOLD}.md` · `scripts/pipeline.py`<br/>**examples/tests:** `examples/intel-kb/{CLAUDE,AGENTS}.md` · `tests/test_pipeline.py` |
 | **Evidence** | Two production judges initially scored anything containing a keyword at 0.8+, reaching only ~69% agreement with human judgment; nearly all misses were keyword-baited. Hence "judge substance, not keywords" and the low-score-when-unsure anchors |
