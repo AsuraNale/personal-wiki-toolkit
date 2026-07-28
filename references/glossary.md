@@ -61,7 +61,7 @@ Do not file a Cadence as a Gate. "Produce a draft every week" blocks nothing;
 >
 > **A Gate without an evidence requirement is a slogan.** The first draft of
 > Preflight failed exactly here: its "proof" was a file the agent wrote, read
-> back, and then deleted — a closed loop, which `qc-rubric.md:7` ("verify from the
+> back, and then deleted — a closed loop, which `references/qc-rubric.md` § The prime principle ("verify from the
 > source, not from the claim") already forbids.
 
 **A Gate is usually not a new door — it is an evidence requirement added to a door
@@ -70,7 +70,7 @@ it is not "the step was skipped":
 
 | Already doing the right thing | What was missing |
 |---|---|
-| `INTERVIEW.md:48-50` demands an explicit "looks good" before scaffolding | no record of it, so nothing can verify it |
+| `setup/INTERVIEW.md` § Phase 1 (the Artifact line) demands an explicit "looks good" before scaffolding | no record of it, so nothing can verify it |
 | The first Preflight draft did verify write access | it verified itself, then deleted the proof |
 | A production stock library's owner really does adjudicate | the verdicts were never written back to the library |
 
@@ -91,7 +91,7 @@ before building one.
 | **Enforced in code by** | `scripts/pipeline.py` — `seen` / `silver` tables, `promote` / `dismiss` |
 | **Does NOT cover** | Shape B (§2) · how items are scored (§3 Curation) · fetch status (§4) |
 | **Referenced by** | **core:** `SKILL.md` · `README.md` · `references/{curation,etl-guide,storage,keeper,qc-rubric,cloud}.md` · `setup/{INTERVIEW,SCAFFOLD}.md` · `templates/{kb-agent-memory,keeper-instructions}.template.md` · `scripts/{pipeline,index_db}.py`<br/>**examples/tests:** `examples/intel-kb/*` · `examples/etl-kb/README.md` · `tests/test_pipeline.py` |
-| **Evidence** | Borrowed from data engineering's medallion architecture (`medallion.md:5`). **Its failure mode is documented**: applied to a data library, Silver silts up — one production recall library sat at 21 Silver rows, 0 promoted / 0 dismissed, while its real table accumulated 567 records around it; the whole scaffold was deleted in the rewrite |
+| **Evidence** | Borrowed from data engineering's medallion architecture (`references/medallion.md`, opening section). **Its failure mode is documented**: applied to a data library, Silver silts up — one production recall library sat at 21 Silver rows, 0 promoted / 0 dismissed, while its real table accumulated 567 records around it; the whole scaffold was deleted in the rewrite |
 | **Status** | `active` |
 | **Version history** | v0.1.2 as shipped · **v0.1.3 adds the "applies to" limit** (it previously claimed universal scope) |
 
@@ -103,11 +103,11 @@ before building one.
 | **Definition** | Fact (auto-appended, **final on write**) → Derived (recomputable, **never hand-edited**, not a source of truth) → Conclusion (human-authored = Gold) |
 | **Category** | Structural model |
 | **Applies to** | data / ETL libraries |
-| **Spec lives in** | 🔴 **nowhere yet** — v0.1.3 writes the first one. Current basis: `references/etl-guide.md:75-82` (the idea, without the structure) |
-| **Enforced in code by** | nothing. Data libraries do not run `pipeline.py` at all (`examples/etl-kb` references it zero times; `SKILL.md:54-58`: "there is no one-click scaffold") |
+| **Spec lives in** | 🔴 **nowhere yet** — v0.1.3 writes the first one. Current basis: `references/etl-guide.md` § Raw observations auto-append; only analysis is curated (the idea, without the structure) |
+| **Enforced in code by** | nothing. Data libraries do not run `pipeline.py` at all (`examples/etl-kb` references it zero times; `SKILL.md` § Start here: route the request — "there is no one-click scaffold") |
 | **Does NOT cover** | relevance scoring · per-row human promotion (**explicitly forbidden here**) |
-| **Referenced by** | **core:** `references/etl-guide.md:75-82`<br/>**examples:** `examples/etl-kb/` |
-| **Evidence** | `etl-guide.md:80-82` — a real build gated raw snapshots behind human promotion by *proposing* weekly `INSERT`s; **the table never grew a second data point.** Separately: **four highly active libraries with no draft step produced zero human Gold** (420 rounds/1,109 rows · 165/89,136 · 127/297 · 44/9,533) |
+| **Referenced by** | **core:** `references/etl-guide.md` § Raw observations auto-append; only analysis is curated<br/>**examples:** `examples/etl-kb/` |
+| **Evidence** | `references/etl-guide.md` § Raw observations auto-append — a real build gated raw snapshots behind human promotion by *proposing* weekly `INSERT`s; **the table never grew a second data point.** Separately: **four highly active libraries with no draft step produced zero human Gold** (420 rounds/1,109 rows · 165/89,136 · 127/297 · 44/9,533) |
 | **Status** | ⚠️ **`proposed`** |
 | **Version history** | Formulated 2026-07-27. **Named descriptively on purpose**: the concept was revised twice during the very discussion that produced it, it is not implemented anywhere, and a coined term would freeze it early. **Name it properly after 2–3 real libraries have run on it.** |
 
@@ -156,12 +156,12 @@ before building one.
 | **④ On failure** | **hard stop** + tell them what to switch to. ⛔ Never degrade to "I'll simulate one in chat" |
 | **Applies to** | every library type |
 | **Spec lives in** | `SKILL.md` (v0.1.3) |
-| **Enforced in code by** | nothing — it must run before any script can (`find_root()` raises `SystemExit(2)` without a config, and the existing `.selftest-probe` at `pipeline.py:605-614` sits *inside* `if config is not None:`) |
+| **Enforced in code by** | nothing — it must run before any script can (`find_root()` raises `SystemExit(2)` without a config, and the existing `.selftest-probe` inside `cmd_selftest()` sits *after* its `if config is not None:` guard) |
 | **Does NOT cover** | whether Python exists (that is Level-0 detection) |
-| **Referenced by** | **core:** `SKILL.md` · `setup/{INTERVIEW,IMPORT,SCAFFOLD}.md` · `MANUAL.md:49-55` (the user-facing version, which already existed) |
+| **Referenced by** | **core:** `SKILL.md` · `setup/{INTERVIEW,IMPORT,SCAFFOLD}.md` · `MANUAL.md` § How to check the assistant you have (the user-facing version, which already existed) |
 | **Evidence** | A user ended a session believing a library had been built, in an assistant with no filesystem at all. **And the naive fix fails too**: a write-read-compare probe passes inside a sandbox/cloud container whose files never reach the user's machine — an agent cannot prove from its own side that "where I wrote" equals "where the user looks" |
 | **Status** | 🆕 v0.1.3 |
-| **Version history** | v0.1.3. First draft used probe-only self-verification; **rejected for violating `qc-rubric.md:7`** |
+| **Version history** | v0.1.3. First draft used probe-only self-verification; **rejected for violating `references/qc-rubric.md` § The prime principle** |
 
 ## 6. Intake — 🆕 **Gate**
 
@@ -179,7 +179,7 @@ before building one.
 | **Enforced in code by** | **nothing** — no script reads `$intake` (`git grep -i intake` over `scripts/` and `tests/`: zero hits). `cmd_selftest` does read `config.json`, but only checks name/sources/paths, `type`, source shape, threshold, pipeline-dir writability and the db schema. If this is ever enforced, it must be **graded, not added to the required-key loop**: a missing `$intake` is a warning (no v0.1.2 library has one — the same tolerance `cmd_selftest` already extends to a missing `type`), while `agent-inferred` is a failure |
 | **Does NOT cover** | how the need evolves *after* the library exists |
 | **Referenced by** | **core:** `SKILL.md` · `README.md` · `setup/{INTERVIEW,IMPORT,SCAFFOLD}.md` · `templates/config.example.json` · `templates/start-here.template.md` |
-| **Evidence** | Models already ask a question or two on their own, so "did it ask" is not the differentiator — **"can anyone check that it asked" is.** `INTERVIEW.md:48-50` already *demands* confirmation ("Do not proceed to Phase 2 without an explicit 'looks good'") but **requires no record of it**, so nothing can verify it happened. Meanwhile Phase 1 pushes the other way: headed `aim: ≤3 exchanges` (`:16`), it drafts topics on the user's behalf (`:24`) and says of cadence + threshold "Only surface these if the user seems opinionated" (`:42-43`) — while the threshold is Curation's core parameter |
+| **Evidence** | Models already ask a question or two on their own, so "did it ask" is not the differentiator — **"can anyone check that it asked" is.** `setup/INTERVIEW.md` § Phase 1 already *demands* confirmation ("Do not proceed to Phase 2 without an explicit 'looks good'") but **requires no record of it**, so nothing can verify it happened. Meanwhile Phase 1 pushes the other way: headed `aim: ≤3 exchanges` (`:16`), it drafts topics on the user's behalf (`:24`) and says of cadence + threshold "Only surface these if the user seems opinionated" (`:42-43`) — while the threshold is Curation's core parameter |
 | **Status** | 🆕 v0.1.3 |
 | **Version history** | v0.1.3. **Not a new gate — it gives an existing one an evidence requirement.** Ships the cheap version (record the user's own words in config); full structured confirmation deferred |
 

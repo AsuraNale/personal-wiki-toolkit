@@ -4,6 +4,10 @@ Read this before writing anything into a library. Tiering is what keeps a
 self-feeding library from silting up with noise: **an item's tier states how much
 scrutiny it survived**, not how interesting it looked.
 
+The Bronze/Silver/Gold naming is borrowed from data engineering's *medallion
+architecture*, adapted for knowledge work — it is an established idea, not one
+invented here.
+
 ## ⚠️ First: which shape is this library?
 
 There are **two** shapes, and applying the wrong one does real damage. Decide
