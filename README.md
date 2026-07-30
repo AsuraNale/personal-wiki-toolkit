@@ -101,12 +101,18 @@ Details and per-platform caveats: `docs/compatibility.md`.
 
 ## Status
 
-**v0.1.3 — pre-1.0.** The build path is validated end-to-end on **three agent
+**v0.1.4 — pre-1.0.** The build path is validated end-to-end on **three agent
 ecosystems** — Claude Code (local *and* cloud), Tencent WorkBuddy, and Codex —
 each a fresh agent that built a working library from just this repo plus a topic,
 unaided, in Level-0 *and* full-SQLite modes. A later live session exercised the
-Intake gate along its happy path; its **failure branch** — a setup that skipped a
-key decision — remains specified and document-checked but **not run**.
+Intake gate along its happy path.
+
+0.1.4 is an interior release: it moves rules that were held up by prose alone
+into code, and redesigns the setup path around what a real user actually found
+tiresome. Four rules **remain unverified**, and the reason is worth reading —
+each is addressed to the agent, so no script is in a position to enforce or
+confirm them. See [CHANGELOG.md](CHANGELOG.md) § *What was verified, and what
+was not*.
 
 **What 0.1.3 changed**, in one line each — full log in
 [CHANGELOG.md](CHANGELOG.md) (中文:[CHANGELOG.zh.md](CHANGELOG.zh.md)):

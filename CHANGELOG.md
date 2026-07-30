@@ -6,7 +6,7 @@ plain-language walkthrough is [MANUAL.md](MANUAL.md) (中文:[MANUAL.zh.md](MANU
 
 ---
 
-## v0.1.4 — unreleased
+## v0.1.4 — 2026-07-30
 
 ### Withdrawn: the Preflight gate
 
@@ -34,6 +34,35 @@ The constraint that made it hard is unchanged and will face any future attempt:
 **an agent cannot prove from its own side that where it wrote is where the user
 looks.** The concept stays in `references/glossary.md`, marked `deferred`, with
 that constraint recorded.
+
+### What was verified, and what was not
+
+**Verified.** 33 of 33 acceptance checks on the code and documents, re-run
+independently against the repository rather than taken from the implementer's
+report. 104 of 104 tests pass. The `evidence` command was exercised on a
+throwaway library: it emits real counts with a `generated_at` stamp, and running
+it twice leaves the database byte-identical — the read-only claim is measured,
+not asserted.
+
+**⚠️ Not verified — four rules, and the reason matters.** These were put through
+forced-failure conditions and could not be judged mechanically:
+
+1. Intake refusing to scaffold when a key decision is marked `agent-inferred`
+2. Intake refusing when `domain` / `topics` / `sources` are marked `default-accepted`
+3. The `$intake` rule that agent-drafted prose may not be filed as a user decision
+4. The keeper raising an unprompted retraction when a previously-cited source is dismissed
+
+Every one of them is addressed to the agent — *stop, go back and ask*; *tell the
+owner, unprompted* — so no script is in a position to enforce them, and no script
+can confirm they happened. **A rule that cannot be checked automatically and a
+rule held up by prose alone are the same rule described two ways.** That is
+precisely why this release moved two other rules into code.
+
+Running a live session could show an agent obeying them once. It could not show
+much more than that: prose rules fail *probabilistically* — under time pressure,
+on the tenth library rather than the first — so a single clean run proves little.
+The honest fix is not more testing; it is moving them where `evidence` and the
+injection check already went.
 
 ## v0.1.3 — 2026-07-27
 
