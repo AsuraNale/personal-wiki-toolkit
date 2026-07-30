@@ -142,6 +142,24 @@ def test_status_classification():
         check("egress deny-reason (host_not_allowed) -> blocked",
               fetch_rss.fetch_source({"kind": "rss", "name": "s", "url": "https://x/d"})["status"] == "blocked")
 
+        # Windows names the same refusal differently. WSAEACCES (10013) is what a firewall
+        # or sandbox returns when it forbids the socket; before this it landed in `failed`,
+        # which tells the user to retry something that can never succeed.
+        def _wsa(req, timeout=None):
+            raise OSError("[WinError 10013] An attempt was made to access a socket in a "
+                          "way forbidden by its access permissions")
+        urllib.request.urlopen = _wsa
+        r = fetch_rss.fetch_source({"kind": "rss", "name": "s", "url": "https://x/w"})
+        check("WinError 10013 (Windows egress block) -> blocked, not failed",
+              r["status"] == "blocked", r)
+
+        # A plain permission error is NOT an egress block — don't over-match.
+        def _perm(req, timeout=None):
+            raise OSError("[Errno 13] Permission denied")
+        urllib.request.urlopen = _perm
+        check("unrelated permission error stays failed (no over-matching)",
+              fetch_rss.fetch_source({"kind": "rss", "name": "s", "url": "https://x/p"})["status"] == "failed")
+
         def _to(req, timeout=None):
             raise TimeoutError("timed out")
         urllib.request.urlopen = _to

@@ -38,7 +38,7 @@
     "pipeline": "_pipeline"
   },
   "$intake": {
-    "$comment": "Intake Gate evidence (setup/INTERVIEW.md): who decided each setup choice. decided_by is one of user-typed | user-selected | default-accepted. 'agent-inferred' is never allowed — if a field would be that, go back and ask. default-accepted is only permitted on cadence/threshold/keeper, and only if you actually stated the default AND its effect.",
+    "$comment": "Intake Gate evidence (setup/INTERVIEW.md): who decided each setup choice. decided_by is one of user-typed | user-selected | default-accepted. 'agent-inferred' is never allowed — if a field would be that, go back and ask. default-accepted is only permitted on cadence/threshold/keeper, and only if you actually stated the default AND its effect. Free text YOU drafted is default-accepted even when the user approved it — it only becomes user-typed if they rewrote it in their own words.",
     "domain": { "value": "what this library is for, in the user's words", "decided_by": "user-typed" },
     "topics": { "value": ["example-topic"], "decided_by": "user-selected" },
     "sources": { "value": ["some-blog", "arxiv-topic"], "decided_by": "user-selected" },

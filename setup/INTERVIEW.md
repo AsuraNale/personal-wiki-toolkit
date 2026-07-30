@@ -101,6 +101,17 @@ you are already producing:
 said the default *and what it does* — "the threshold defaults to 0.7, so anything
 I score below that stays out of sight" — not if you merely defaulted internally.
 
+⚠️ **Text you drafted is never `user-selected`, even when the user said yes to it.**
+A real session put the keeper's top red line — which the agent had proposed itself
+("let me suggest we write it as…") — under `decided_by: user-selected`, alongside
+genuine yes/no answers. Approving wording you wrote is weaker evidence than
+choosing it, and burying the two in one field hides which is which.
+
+So: **any value that is free text you drafted goes in its own key, marked
+`default-accepted`** — never merged with the user's own choices. If the user
+rewrote it in their words, *then* it is `user-typed`. The test is not "did they
+agree" but **"whose words are in the file"**.
+
 **Why record rather than force a choice:** asking a first-time user to pick
 between 0.6 / 0.7 / 0.8 is a fake choice — they have no basis yet. **Telling them
 is more honest than making them choose.** But telling them and recording that you

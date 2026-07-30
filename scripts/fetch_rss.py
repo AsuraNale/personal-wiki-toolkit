@@ -86,6 +86,11 @@ _BLOCK_SIGNATURES = (
     "proxy authentication",       # 407 surfaced at the connection layer
     "forbidden by proxy",
     "blocked by policy",
+    # Windows names the same refusal differently: WSAEACCES (10013) is what a firewall
+    # or sandbox returns when it forbids the socket outright. Without this it lands in
+    # `failed`, telling the user to retry something that will never succeed.
+    "winerror 10013",
+    "forbidden by its access permissions",
 )
 
 
