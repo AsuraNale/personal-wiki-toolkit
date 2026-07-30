@@ -1,5 +1,5 @@
 <!--
-START-HERE template (NEW-6). Instantiate as START-HERE.md in the library root at
+START-HERE template. Instantiate as START-HERE.md in the library root at
 handover. This is the owner's front door: the file they open when they've
 forgotten how any of this works.
 

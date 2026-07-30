@@ -80,6 +80,13 @@ while the report looks better.
 as if it were the first.** A metric moved by changing the measurement is not an
 improvement; if the threshold changed, the QC report says so next to the score.
 
+**⛔ And the threshold is not yours to move.** It decides what the library will
+never show its owner, so changing it is an owner decision, not a QC finding:
+propose it with the evidence ("agreement was 6/10; the four misses were all X"),
+and **wait for an explicit yes**. Recording a unilateral change is not the same as
+being allowed to make one — a QC round that both moved the parameter and graded
+the result has audited itself.
+
 ## Reporting QC results
 
 State what was checked, what passed, what failed **with the evidence**, and

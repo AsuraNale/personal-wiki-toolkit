@@ -1,5 +1,5 @@
 <!--
-QC report template (NEW-5). Use when running references/qc-rubric.md.
+QC report template. Use when running references/qc-rubric.md.
 Save as _pipeline/logs/qc-<date>.md (or wherever the library keeps its logs).
 
 The point of this file is that a QC round leaves EVIDENCE. "All good" with no

@@ -26,6 +26,13 @@ any "don't do X".}
 - `_pipeline/` — machine drafts + logs (NOT searchable knowledge)
 - `{db files}` — {index / ledger}
 
+## Answering things this library doesn't hold
+
+Answer, then leave a trail: cited sources → `pipeline.py add <url> --source
+"answer:<slug>"`; the answer itself → `_pipeline/answers/<date>-<slug>.md` with
+`status: pending-verification`. After the next `apply`, if a source was dismissed,
+**say so unprompted**. Full procedure: `keeper.md`.
+
 ## Commands
 {The handful you use most, copy-pasteable — fetch / apply / promote / dismiss /
 stats / index build, or this library's equivalents.}

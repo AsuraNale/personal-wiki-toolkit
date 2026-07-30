@@ -156,7 +156,7 @@ before building one.
 | **④ On failure** | **hard stop** + tell them what to switch to. ⛔ Never degrade to "I'll simulate one in chat" |
 | **Applies to** | every library type |
 | **Spec lives in** | `SKILL.md` (v0.1.3) |
-| **Enforced in code by** | nothing — it must run before any script can (`find_root()` raises `SystemExit(2)` without a config, and the existing `.selftest-probe` inside `cmd_selftest()` sits *after* its `if config is not None:` guard) |
+| **Enforced in code by** | nothing — it must run before any script can (`find_root()` raises `SystemExit(2)` without a config, and the existing `.selftest-probe` sits **inside** `cmd_selftest()`'s `if config is not None:` guard — so it cannot run until a config already exists, which is exactly when an entry check is too late) |
 | **Does NOT cover** | whether Python exists (that is Level-0 detection) |
 | **Referenced by** | **core:** `SKILL.md` · `README.md` · `MANUAL.md` § *How to check the assistant you have* (the user-facing version, which predates the gate) · `MANUAL.zh.md` · `CHANGELOG.md` / `CHANGELOG.zh.md`. ⚠️ **Not** `setup/` — nothing there mentions it; Preflight runs before any setup file is read |
 | **Evidence** | A user ended a session believing a library had been built, in an assistant with no filesystem at all. **And the naive fix fails too**: a write-read-compare probe passes inside a sandbox/cloud container whose files never reach the user's machine — an agent cannot prove from its own side that "where I wrote" equals "where the user looks" |
@@ -195,7 +195,7 @@ before building one.
 
 ## Changing any of this
 
-1. **Read the `Referenced by` row first, then re-grep** — it is a snapshot. Changing `medallion.md` alone touches sixteen core files; the list was originally written from memory and was missing more than half of them.
+1. **Read the `Referenced by` row first, then re-grep** — it is a snapshot. Changing `medallion.md` alone touches every core file listed on its card — the hand-written version of that list missed more than half of them. **Count from the row, never from a number written in prose**: a hard-coded count is one more thing that silently goes stale (this sentence said "sixteen" while the row listed 14).
 2. **Check `Enforced in code by`** — a doc change with a code enforcement point is only half done.
 3. **Never delete a rule whose `Evidence` row names a real incident** without saying what changed about that incident. That row exists because a later reader will otherwise mistake a hard-won rule for a style preference.
 4. **Anything `proposed` is not settled** — do not build on it as if it were.

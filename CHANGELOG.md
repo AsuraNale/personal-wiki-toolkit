@@ -129,10 +129,15 @@ links in a generated `.docx`.
 ### ⚠️ Verified at the document level only
 
 Seven behaviours specified in this release were **not** exercised end-to-end,
-because they require a live agent session to observe: Preflight reporting `E1`
-in a toolless environment, Preflight reporting `E4` when a user answers "I don't
-see it", Intake actually blocking a setup that skipped a key decision, and the
-retraction prompt firing when a previously-cited source is dismissed.
+because each requires a live agent session to observe:
+
+1. Preflight reporting `E1` in an environment with no file tools
+2. Preflight reporting `E2` when the target directory is read-only
+3. Preflight reporting `E3` when no working directory was given
+4. Preflight reporting `E4` when the user answers "I don't see it"
+5. Preflight refusing to declare the library built while stage 3 is unconfirmed
+6. Intake blocking a setup in which a key decision was `agent-inferred`
+7. The retraction prompt firing when a previously-cited source is later dismissed
 
 They are specified, and the documents were checked — but they were not run. A
 check that didn't happen is recorded as not having happened, not as a pass. That

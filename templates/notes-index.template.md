@@ -1,5 +1,5 @@
 <!--
-Notes index template (NEW-7). Instantiate as notes/INDEX.md (or per-topic).
+Notes index template. Instantiate as notes/INDEX.md (or per-topic).
 A browsable table of what the library holds — the thing kb.db knows but a human
 can't read.
 
@@ -7,7 +7,7 @@ Rules:
 - Regenerate rather than hand-maintain where possible: `index_db.py coverage` has
   the counts, and the note frontmatter has the rest.
 - One row per note. If that becomes unreadable, the library needs topic
-  directories (SCAFFOLD §1, NEW-8), not a shorter index.
+  directories (`setup/SCAFFOLD.md` § *Adjust the tree to the library's shape*), not a shorter index.
 - "Last touched" is what makes staleness visible. Keep it accurate or drop the
   column — a wrong date is worse than no date.
 - This index is DERIVED: it is rebuildable from the notes. Never let it become

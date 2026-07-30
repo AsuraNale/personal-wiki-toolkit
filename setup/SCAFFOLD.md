@@ -20,6 +20,7 @@ missing pieces, leave existing ones alone, and say what you skipped).
 │   ├── silver/          machine-drafted briefs awaiting curation (AUTO-*.md)
 │   ├── pending.json     ← fetch output: items awaiting YOUR judgment
 │   ├── judgments.json   → your scores; consumed by `pipeline.py apply`
+│   ├── answers/         answers given from OUTSIDE the library, pending verification
 │   └── logs/            fetch/run logs
 ├── kb.db                index: notes, tags, links, coverage   (SQLite)
 ├── intel.db             ledger: seen, silver, fetch_log, demand (SQLite)
@@ -32,7 +33,7 @@ missing pieces, leave existing ones alone, and say what you skipped).
 The layout above is **Shape A** (adjudication: intel / import). Check
 `config.type` and `references/medallion.md` before generating:
 
-**Shape A · intel** — organize `notes/` by topic count (**NEW-8**):
+**Shape A · intel** — organize `notes/` by topic count:
 - **≤2 topics** → keep `notes/` flat. Sub-directories for two topics are pure
   overhead, and a nearly-empty folder reads as "nothing here".
 - **≥3 topics** → one directory per topic, named from the topic's `key`
@@ -197,6 +198,10 @@ If demand-tracking is on, the keeper logs out-of-library queries with
       captured as phrasing, first-run rite done (map verified against the real library)
 - [ ] `START-HERE.md` written from `templates/start-here.template.md`, and every
       suggested question in it was **actually tried** against this library
+- [ ] the library's own memory file tells a future session **how** to use
+      `_pipeline/answers/` — an empty directory nobody is instructed to use is the
+      same defect in another shape (see `references/keeper.md` § *Answering from
+      outside the library*)
 - [ ] **Intake recorded**: `config.json` carries `$intake`, and nothing in it is
       `agent-inferred` (see `setup/INTERVIEW.md` § Intake)
 - [ ] **Shape B only — the human loop is actually wired**, both halves:
