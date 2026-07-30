@@ -46,6 +46,27 @@ and monthly after.
 | B5 | **No silent truncation** | anywhere the system caps/paginates/samples | the cap is stated in output ("showing 50 of 740"), never implied completeness |
 | B6 | **Degradation honesty** | items that can't be computed (missing inputs) | shown as N/A with a reason — never a plausible-looking wrong number |
 
+## Before you grade anything: where does the ground truth live?
+
+Not every check is the same kind of claim, and treating them alike is how a QC
+round ends up asserting things it cannot know. Ask where the correct answer
+actually exists:
+
+| Ground truth lives | Checks | What a verdict means |
+|---|---|---|
+| **In the ledger** | A4 · A5 · A6 · A7 | You can settle these yourself — the number is computable. Take it from `pipeline.py evidence`, don't retype it |
+| **In an external source** | A2 | You can settle it by going and looking — follow the link |
+| ⚠️ **In the owner's head** | A1, and the first half of A3 | **You cannot pass these alone.** "Is this relevant to me?" has no answer inside the library |
+
+**So a QC round run entirely by the agent legitimately ends with A1 unresolved,**
+and `skipped — needs the owner` is the correct verdict there, not a gap in the
+work. Recording it as a pass is the failure; recording it as skipped is the rubric
+working.
+
+> This is a principle, not yet a pass/fail change: A1's bar isn't being redefined
+> here. Tightening it needs `_pipeline/calibration.jsonl` to have accumulated real
+> data first — a gate with no data behind it is a gate in name only.
+
 ## Auditing an agent's work (the meta-rubric)
 
 When the user asks "is my keeper doing a good job?" — or when YOU audit a

@@ -202,6 +202,12 @@ If demand-tracking is on, the keeper logs out-of-library queries with
       `_pipeline/answers/` — an empty directory nobody is instructed to use is the
       same defect in another shape (see `references/keeper.md` § *Answering from
       outside the library*)
+- [ ] **Handover states the library's real state**, with an `evidence` block pasted
+      (`python scripts/pipeline.py evidence`) — how many items await a verdict, and
+      that leaving them costs nothing but keeps them out of sight. **Numbers must be
+      pasted, not retyped**: a real QC report got three of them wrong by hand.
+      ⚠️ This proves the counts are genuine; it does **not** prove the owner read or
+      understood them. Don't record it as if it did.
 - [ ] **Intake recorded**: `config.json` carries `$intake`, and nothing in it is
       `agent-inferred` (see `setup/INTERVIEW.md` § Intake)
 - [ ] **Shape B only — the human loop is actually wired**, both halves:

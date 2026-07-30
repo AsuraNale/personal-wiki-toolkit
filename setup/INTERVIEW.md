@@ -92,6 +92,22 @@ you are already producing:
 | `default-accepted` | **you stated the default and its effect**, and they took it | `cadence`, `threshold`, `keeper` only |
 | ⛔ `agent-inferred` | you decided quietly; they never knew it was a question | **nothing — this is the failure** |
 
+**Shape is one of the recorded decisions.** Which shape this library takes —
+adjudication (Bronze→Silver→Gold) or accumulation (Fact→Derived→Conclusion) —
+changes the scaffold, the tier rules, and what the keeper does. **It is not yours
+to settle quietly.** Say which you think it is and why, in one line the owner can
+disagree with:
+
+> "This looks like a **tracking** library — items arrive, you decide what's worth
+> keeping. The other kind is for **numbers over time**, where rows just accumulate
+> and you write conclusions on top. Sound right?"
+
+Record it as `shape` in `$intake`, with the same `decided_by` rules as everything
+else. **A library whose shape was never discussed is the one failure mode with a
+name**: one real tracker was configured `intel` while its actual work was a price
+table — the intel scaffold sat empty beside the data it never touched, and nothing
+in the flow noticed, because nobody was ever asked.
+
 **The check, before you scaffold:**
 - any field marked `agent-inferred` → **stop, go back and ask**
 - `domain` / `topics` / `sources` marked `default-accepted` → **stop**; these have
