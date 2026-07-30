@@ -6,6 +6,35 @@ plain-language walkthrough is [MANUAL.md](MANUAL.md) (中文:[MANUAL.zh.md](MANU
 
 ---
 
+## v0.1.4 — unreleased
+
+### Withdrawn: the Preflight gate
+
+**v0.1.3's headline feature is removed, two weeks after shipping.** It required
+the agent to prove it could write to the user's machine — state the path, drop a
+probe file, and have the user go look at it — before anything else happened.
+
+It is withdrawn because it broke the flow it was protecting: three exchanges
+before the work starts, one of them asking the user to leave the conversation and
+check a folder. And the users it would have turned away are ones this toolkit does
+not set out to serve — someone who cannot give their assistant a working folder
+after reading the manual needs a different kind of product.
+
+**What replaces it:** one sentence in the manual — *open a folder as its workspace
+before you start*. Nothing that cannot be checked automatically should cost the
+user an action.
+
+**What this gives up, stated plainly:** the failure it caught was real — a user
+once finished a whole session believing a library had been built, inside an
+assistant with no filesystem at all. That failure can happen again, and now
+nothing will stop it. The v0.1.3 entry below is left exactly as published;
+withdrawing a feature is not a reason to edit the record of having shipped it.
+
+The constraint that made it hard is unchanged and will face any future attempt:
+**an agent cannot prove from its own side that where it wrote is where the user
+looks.** The concept stays in `references/glossary.md`, marked `deferred`, with
+that constraint recorded.
+
 ## v0.1.3 — 2026-07-27
 
 **The theme: the toolkit stopped taking its own word for it.**

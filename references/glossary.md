@@ -143,11 +143,12 @@ before building one.
 | **Status** | `active` |
 | **Version history** | v0.1.1 four states → **v0.1.2 adds `blocked`** (policy refusal ≠ "nothing there" ≠ "retry later") |
 
-## 5. Preflight — 🆕 **Gate**
+## 5. Preflight — ⏸️ `deferred`
 
 | | |
 |---|---|
 | **Name** | **Preflight** (准入自检) |
+| ⏸️ **Status note** | **Withdrawn in v0.1.4, two weeks after shipping.** Not deleted: the failure it was built for is real and the constraint it ran into is the hard part of any future attempt — see Evidence and Version history below |
 | **Definition** | Before anything else, establish that this agent can really create files **on the user's machine** |
 | **Category** | **Gate** |
 | **① Evidence required** ⭐ | **An artifact the user has looked at with their own eyes**, in a location the user knows |
@@ -158,10 +159,10 @@ before building one.
 | **Spec lives in** | `SKILL.md` (v0.1.3) |
 | **Enforced in code by** | nothing — it must run before any script can (`find_root()` raises `SystemExit(2)` without a config, and the existing `.selftest-probe` sits **inside** `cmd_selftest()`'s `if config is not None:` guard — so it cannot run until a config already exists, which is exactly when an entry check is too late) |
 | **Does NOT cover** | whether Python exists (that is Level-0 detection) |
-| **Referenced by** | **core:** `SKILL.md` · `README.md` · `MANUAL.md` § *How to check the assistant you have* (the user-facing version, which predates the gate) · `MANUAL.zh.md` · `CHANGELOG.md` / `CHANGELOG.zh.md`. ⚠️ **Not** `setup/` — nothing there mentions it; Preflight runs before any setup file is read |
+| **Referenced by** | **none in the active flow.** Re-grepped after the v0.1.4 withdrawal: the only remaining mentions are historical — `CHANGELOG.md` / `CHANGELOG.zh.md` (the v0.1.3 entry, kept as shipped history, plus the v0.1.4 withdrawal) and `README.md` (a one-line pointer to that entry). `SKILL.md`, `MANUAL.md` and `MANUAL.zh.md` no longer mention it |
 | **Evidence** | A user ended a session believing a library had been built, in an assistant with no filesystem at all. **And the naive fix fails too**: a write-read-compare probe passes inside a sandbox/cloud container whose files never reach the user's machine — an agent cannot prove from its own side that "where I wrote" equals "where the user looks" |
-| **Status** | 🆕 v0.1.3 |
-| **Version history** | v0.1.3. First draft used probe-only self-verification; **rejected for violating `references/qc-rubric.md` § The prime principle** |
+| **Status** | ⏸️ **`deferred`** — shipped v0.1.3, withdrawn v0.1.4, no target version |
+| **Version history** | v0.1.3 shipped it (first draft used probe-only self-verification and was **rejected for violating `references/qc-rubric.md` § The prime principle**). **v0.1.4 withdrew it** — it broke the setup flow, and the users it would have turned away are ones this toolkit does not aim to serve. ⚠️ **The constraint outlives the withdrawal**: an agent still cannot prove from its own side that where it wrote is where the user looks. Any future attempt starts from that, not from a better probe |
 
 ## 6. Intake — 🆕 **Gate**
 
@@ -180,7 +181,7 @@ before building one.
 | **Does NOT cover** | how the need evolves *after* the library exists |
 | **Referenced by** | **core:** `SKILL.md` · `README.md` · `setup/{INTERVIEW,IMPORT,SCAFFOLD}.md` · `templates/config.example.json` · `templates/start-here.template.md` |
 | **Evidence** | Models already ask a question or two on their own, so "did it ask" is not the differentiator — **"can anyone check that it asked" is.** `setup/INTERVIEW.md` § *Phase 1* already *demands* confirmation ("Do not proceed to Phase 2 without an explicit 'looks good'") but **requires no record of it**, so nothing can verify it happened. The toolkit was also pushing the other way, which **v0.1.3 fixed (FIX-12)**: Phase 1 was headed `aim: ≤3 exchanges` — a question budget — and told the agent to surface cadence and threshold "only if the user seems opinionated", while the threshold is Curation's core parameter and governs what the library will never show them |
-| **Status** | 🆕 v0.1.3 |
+| **Status** | ⏸️ **`deferred`** — shipped v0.1.3, withdrawn v0.1.4, no target version |
 | **Version history** | v0.1.3. **Not a new gate — it gives an existing one an evidence requirement.** Ships the cheap version (record the user's own words in config); full structured confirmation deferred |
 
 ---

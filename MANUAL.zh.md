@@ -15,7 +15,6 @@ personal-wiki-toolkit 是一套开源工具包。它能让 AI Agent 辅助您建
 1. 一份 AI 订阅服务，或一个 AI 模型 API。包括但不限于 Claude Pro、ChatGPT Plus、智谱AI Pro 及以上。（推荐使用的模型，包括但不限于：Claude Opus 4.8、ChatGPT 5.6 Terra、GLM-5.2、Kimi K3、DeepSeek V4）
 2. 一个能读写电脑文件的 AI Agent 软件，推荐使用 Claude Code、Codex 与 WorkBuddy。
 
-**工具包自己那一侧也会做一次能力自检（Preflight）。** 一个正常工作的 AI Agent，在动手建库**之前**会：告诉您它要用的完整路径 → 在那儿放一个叫 `.pwt-capability-check` 的小文件 → **请您去看一眼**。如果您的 AI Agent **跳过这步直接开建** —— 让它先做一遍自检。**一个从没请您去看过任何东西、却说「建好了」的 AI Agent，正是这个检查要挡的那种情况。**
 
 首次建库需要投入 15–30 分钟。建好后，每天大约花 5 分钟维护。
 

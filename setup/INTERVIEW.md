@@ -30,7 +30,26 @@ Collect, in whatever order the conversation allows:
    2–4 search keywords. Keywords must be *searchable strings that would
    actually appear in titles*, not abstract category names. Show the draft
    table; let the user edit.
-3. **Sources.** Recommend by domain:
+3. **Sources.** ⚠️ **Ask what they already read before you recommend anything.**
+   The spec has always said to ask for 2–5 feeds the owner follows; a real build
+   never asked, chose all five itself, and recorded them as `user-selected`. Their
+   own sources are the best signal you will get, and they are the one thing you
+   cannot infer.
+
+   **Take whatever form they can give**, and record how it arrived:
+
+   | They give you | `decided_by` | Your job |
+   |---|---|---|
+   | a pick from your list | `user-selected` | — |
+   | a URL | `user-typed` | — |
+   | **a site name** ("that site X") | `user-typed` | **find its feed** |
+   | **a rough area** ("the government announcements") | `user-typed` | **turn it into concrete sources** |
+
+   For the last two: **read back what you resolved it to, and get a yes** — "you
+   said the government announcements; I found this feed, is that the one?" Resolving
+   a vague answer without reading it back is deciding for them again, in a new shape.
+
+   Then recommend by domain to fill the gaps:
    - academic-flavored → arXiv queries (exact-phrase keywords);
    - tech/startup-flavored → Hacker News (Algolia search, min-points filter);
    - any domain → RSS/Atom feeds of the blogs/newsletters/news sites the user
@@ -139,6 +158,44 @@ told them is the part that has to be true.
 
 ---
 
+## Phase 1.5 — One design confirmation, before anything is built
+
+Three things used to be settled without ever being shown: which **shape** the
+library is, what **structure** it gets, and which **sources** feed it. Each was a
+place where the flow simply continued with nobody having looked.
+
+Do not ask about them three times. **Show all three once**, in one message the
+owner can react to:
+
+```
+Here's what I'd build for you:
+
+  SHAPE     A tracking library — things arrive, you decide what's worth keeping.
+            (The other kind is for numbers over time. Say if that's closer.)
+
+  STRUCTURE my-kb/
+              notes/agent-tooling/    ← one folder per topic
+              notes/evals/
+              briefs/                 ← what I write for you each round
+              _pipeline/              ← my working area; you can ignore it
+
+  SOURCES   • Simon Willison's blog        (you named this one)
+            • Hacker News, ≥50 points      (my suggestion)
+            • arXiv: "agent memory"        (my suggestion)
+
+Anything you'd change?
+```
+
+**If they want changes, go back to Phase 1** and re-show. That loop is the point:
+it is cheaper to redraw this than to rebuild a library.
+
+**Why one message and not three:** every question costs the owner their place in
+what they were doing. Three separate confirmations interrupt three times *and*
+still leave the gaps, because two of the three were never asked at all. One
+message, one interruption, nothing settled behind their back.
+
+---
+
 ## Phase 2 — Scaffold
 
 Read `setup/SCAFFOLD.md` and execute it with the confirmed config. Summary of
@@ -189,12 +246,43 @@ to SQLite.
    instantiate `templates/keeper-instructions.template.md` as `keeper.md` →
    first-run rite: verify the library map against the REAL library → hand off).
    Role definition: `references/keeper.md`.
-2. Write **`START-HERE.md`** from `templates/start-here.template.md` — the file
+2. **Introduce the keeper, and let the owner name it.** ⚠️ Not "I've enabled a
+   keeper called X, keep it?" — in two real builds the agent chose the name and the
+   owner was left approving it, which was then recorded as their decision.
+
+   Have the keeper introduce itself in three short beats:
+
+   > "I'll be looking after this library: I collect on the schedule we set, score
+   > what comes in, and keep the index honest. **Ask me anything about what's in
+   > here — that's what I'm for.**
+   >
+   > Right now **54 items are waiting for your verdict**. Whenever you feel like
+   > it, tell me which are worth keeping and I'll write them up properly. **Leaving
+   > them costs nothing** — I keep collecting either way.
+   >
+   > What would you like to call me?"
+
+   Three things happen in that one message, at no extra cost:
+   - **It says what state the library is in** — the handover obligation from red
+     line #7. Take the count from `pipeline.py evidence`; don't type it from memory.
+   - **It explains what happens next** without a vocabulary lesson. ⛔ **Do not say
+     "Bronze", "Silver" or "Gold" to the owner.** Those words appear nowhere in the
+     manual — they are ours, not theirs. Say *waiting for your verdict* and *written
+     up properly*. One owner who personally promoted 39 items still could not
+     recall which tier was which; the words are not what makes it usable.
+   - **Naming is the owner's.** Record it `user-typed`. A name someone chose is a
+     thing they own; a name they approved is a thing you chose.
+
+   ⚠️ **Naming is not the same as setting its red lines.** If you draft the keeper's
+   top red line, that text is yours — record it `default-accepted` under its own key
+   (`setup/INTERVIEW.md` § Intake), never merged with what the owner actually picked.
+
+3. Write **`START-HERE.md`** from `templates/start-here.template.md` — the file
    the owner opens when they've forgotten how this works. ⚠️ **Test every
    suggested question against the real library first**: one that returns nothing
    teaches them the library is useless. For ≥3 topics also instantiate
    `templates/notes-index.template.md`.
-3. Give the user the **one-page care guide** (write it into the library as
+4. Give the user the **one-page care guide** (write it into the library as
    `CARE.md`, in their language):
    - daily/whenever: skim the new brief (2 min);
    - promote what deserves permanence, dismiss what doesn't — with reasons;
@@ -202,11 +290,11 @@ to SQLite.
      demand-board candidates?" (coverage + emergent-topic proposals);
    - monthly: skim `references/qc-rubric.md` checks — or just ask the agent
      to run a self-audit and show evidence.
-4. Remind them: the toolkit repo can be deleted; the library is
+5. Remind them: the toolkit repo can be deleted; the library is
    self-describing via its own memory file. Updates to the toolkit can be
    re-applied by re-reading it against an existing library (idempotent
    scaffold).
-5. State honestly what was NOT set up (e.g. schedule not registered yet, or
+6. State honestly what was NOT set up (e.g. schedule not registered yet, or
    Level-0 mode) and what the user must do for it.
 
 Done means: the user watched the loop run once, touched promote/dismiss with

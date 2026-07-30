@@ -11,7 +11,7 @@ description: >-
 license: MIT
 metadata:
   author: personal-wiki-toolkit
-  version: "0.1.3"
+  version: "0.1.4"
 ---
 
 # Personal Wiki Toolkit
@@ -64,14 +64,13 @@ Conclusion), and forcing the tiers onto them stalls the library outright — see
 
 ## Gates: steps that must be provably done, not merely done
 
-Two steps in this flow are **Gates**. A Gate is not a checklist item — it blocks.
+One step in this flow is a **Gate**. A Gate is not a checklist item — it blocks.
 You may not proceed past one until it has produced **evidence you could not have
 fabricated on your own**: either the user confirms something with their own eyes,
 or an artifact is left on disk that a third party can inspect.
 
 | Gate | Blocks | Evidence it must leave |
 |---|---|---|
-| **Preflight** (below) | everything | a file **the user has looked at**, where they expect it |
 | **Intake** (`setup/INTERVIEW.md`, `setup/IMPORT.md`) | scaffolding | the user's own words/choices, recorded in `config.json` |
 
 **A Gate you passed but cannot prove you passed has not been passed.** Every
@@ -80,87 +79,6 @@ performed, and nothing could verify it. See `references/glossary.md`.
 
 > Distinct from a **Cadence** (a recurring duty, e.g. "produce a draft every
 > week"). Missing a Cadence means catching up; failing a Gate means stopping.
-
-## Gate 0 — Preflight: prove you can write to the user's machine
-
-**Before anything else — before routing the request, before reading any config,
-before touching any script.**
-
-You are about to build something whose entire value is that it exists as real
-files on the user's computer. If you cannot put files there, everything after
-this point is theatre. **This has actually happened**: a user finished a session
-believing a library had been built, in an assistant that had no filesystem access
-at all.
-
-Three stages, in order. Each one catches a different failure:
-
-**1 — Say where.** State the **absolute path** you are about to build in, before
-writing anything:
-
-> "I'll build the library in `C:\Users\you\Desktop\my-kb`."
-
-No target directory → **E3**. *(Catches: you are about to build in a folder the
-user didn't mean — they will say so the moment they read the path.)*
-
-**2 — Write, read back, compare.** Create `.pwt-capability-check` in that
-directory with a known string, read it back, compare **verbatim**.
-
-Can't read it back, or content differs → **E1**. Tools exist but the write was
-refused → **E2**. *(Catches: no filesystem at all; read-only.)*
-
-⚠️ **Do not delete it yet.**
-
-**3 ⭐ — Have the user look.**
-
-> "Please open `<absolute path>` and tell me: is there a file called
-> `.pwt-capability-check` in it?"
-
-User can't see it → **E4**. User confirms → **passed; now delete the probe** and
-continue (to Level-0 detection, then Intake).
-
-**Stage 3 is not politeness — it is the only stage that can work.** Stages 1–2 run
-entirely inside your own environment, so they pass happily inside a cloud sandbox
-whose files never reach the user's computer. **You cannot prove from your own side
-that "where I wrote" is "where the user looks."** That is not caution; it is a
-logical impossibility. Only the user closes that gap.
-
-### When it fails
-
-| | Situation | Tell the user |
-|---|---|---|
-| **E1** | No file read/write tools | "I **can't read or write files** here. This toolkit builds a real folder on your computer, so it needs an assistant with filesystem access." + where to go, below |
-| **E2** | Tools exist, write refused | "I have file tools but the write was **refused** (permissions or sandbox). That's not a capability problem — grant access to the folder and we can retry." |
-| **E3** | No working directory | "I need a **working directory** first. Use 'open folder' to point me at an empty one, then we can start." |
-| **E4** 🆕 | Probe passed, **user can't see the file** | "It succeeded on my side, but **you can't see it** — so I'm not writing to your computer (probably a cloud container or sandbox). **A library I build here wouldn't reach you**, so I'm stopping." + where to go, below |
-
-**Where to go** (E1 / E4): **Claude Code** desktop · **ChatGPT desktop app** in
-Codex mode (Plus is enough — the *desktop* app, not the browser) · **Tencent
-WorkBuddy**. Not: browser chat, phone apps.
-
-### Red lines
-
-- **Fail → hard stop.** ⛔ Never "simulate" the library in chat, never produce
-  anything that *looks like* library output (briefs, notes, an index, a
-  fetch_log), never say the library exists, never carry on with the rest of this
-  file.
-- **A passing probe is not enough.** Until the user confirms stage 3, you may not
-  say the library was built. *"It said it built it"* is, verbatim, how the
-  original failure was reported.
-- **Never delete the evidence before the user has seen it.** A file you wrote,
-  read, and removed proves nothing — that closed loop is exactly what
-  `references/qc-rubric.md` rules out: verify from the source, not from the claim.
-- **If the user pushes back** — "just build it anyway" — **still refuse.**
-
-**Why "doing your best anyway" is the harmful option here.** Your default pull is
-to help. Resist it: without a filesystem you would produce a library that *looks*
-real and isn't. The user walks away believing they have a traceable knowledge base
-when what they actually have is one-off chat text whose "sources" you recalled
-from memory — **nothing in it can be traced back**. That is not a hypothetical;
-it is what a real user reported.
-
-The one thing you may offer: answer their question directly, **while saying
-plainly that this is not a library** — nothing is saved, and sources aren't
-guaranteed. Make clear it is not a product of this toolkit.
 
 ## Start here: route the request
 
@@ -311,10 +229,11 @@ SKILL.md because they must never be skipped:
 
 ## Level-0 mode (no Python available)
 
-> **Level-0 still requires a filesystem, so it still comes after Preflight.** It is
-> the fallback for "no Python", **not** for "no place to write" — Level-0 itself
-> writes `index.md` and `_pipeline/seen.md`. Missing Python downgrades the library;
-> missing a filesystem means there is no library.
+> **Level-0 still requires a filesystem.** It is the fallback for "no Python",
+> **not** for "no place to write" — Level-0 itself writes `index.md` and
+> `_pipeline/seen.md`. Missing Python downgrades the library; missing a filesystem
+> means there is no library, and you should say so plainly rather than produce one
+> that only exists in the conversation.
 
 **First, make sure Python is really absent — don't false-negative into Level-0.**
 On Windows, bare `python` is often a Microsoft Store *alias* that prints a

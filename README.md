@@ -104,22 +104,14 @@ Details and per-platform caveats: `docs/compatibility.md`.
 **v0.1.3 — pre-1.0.** The build path is validated end-to-end on **three agent
 ecosystems** — Claude Code (local *and* cloud), Tencent WorkBuddy, and Codex —
 each a fresh agent that built a working library from just this repo plus a topic,
-unaided, in Level-0 *and* full-SQLite modes. Since then a live session has
-exercised the two gates added in 0.1.3 along their **happy path** — Preflight
-passing, Intake recording the decisions. Their **failure branches** (a toolless
-environment, a user who can't see the probe file, a setup that skipped a key
-decision) remain specified and document-checked but **not run**. See
-[CHANGELOG.md](CHANGELOG.md) § *Verified at the document level only* for the
-enumerated list.
+unaided, in Level-0 *and* full-SQLite modes. A later live session exercised the
+Intake gate along its happy path; its **failure branch** — a setup that skipped a
+key decision — remains specified and document-checked but **not run**.
 
 **What 0.1.3 changed**, in one line each — full log in
 [CHANGELOG.md](CHANGELOG.md) (中文:[CHANGELOG.zh.md](CHANGELOG.zh.md)):
 
-- **It stops pretending.** A **Preflight** gate now runs before anything else and
-  ends with *the user* confirming a file appeared on *their* machine — because an
-  agent cannot prove from its own side that where it wrote is where the user looks.
-  A previous user finished a session believing a library had been built, inside an
-  assistant with no filesystem at all.
+- **It stops pretending.** *(Preflight — withdrawn in v0.1.4; see that entry.)*
 - **It records who decided what.** An **Intake** gate writes the setup decisions
   into `config.json` marked `user-typed` / `user-selected` / `default-accepted` —
   and `agent-inferred` is not allowed anywhere. Accepting a stated default is a

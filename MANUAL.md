@@ -44,22 +44,14 @@ The AI assistant that drives this toolkit needs a paid account. **If you already
 >
 > (Phone apps can't build the library. But once it's built, querying a cloud library from your phone is fine — see Step 1.)
 
-### How to check the assistant you have
+### Give it a folder to work in
 
-**Don't ask it "can you?"** — an AI will confidently say yes, and **the browser version of ChatGPT will say yes too**. **Make it do the thing, and look for yourself:**
+Whatever assistant you use, **open a folder as its workspace before you start** —
+an empty one is fine. The library will be built there, as real files you can open,
+back up and move.
 
-> Tell it: **"Create a folder called `wiki-test` on my Desktop, then tell me the full path."**
-
-Then **go look at your Desktop**:
-- The folder **is actually there** → you're good (delete it once you've looked)
-- **Nothing appeared**, or it starts explaining that it can't access your file system → it won't work; switch to one from the table above
-
-> **The toolkit runs this same check from its side.** A properly working assistant
-> will, before building anything, tell you the full path it's about to use, drop a
-> small `.pwt-capability-check` file there, and **ask you to go look at it**. If
-> yours skips straight to building — ask it to run its Preflight check first. An
-> assistant that says "done!" without ever asking you to look at anything is the
-> exact failure this check exists to catch.
+That is the whole requirement. If your assistant has no way to open a folder and
+work with files in it, it cannot build this library.
 
 ### What to expect
 

@@ -156,8 +156,11 @@ Design rationale and failure discipline for anything scheduled:
 A keeper is a standing role definition (`keeper.md`) that any future agent session
 in this library assumes — see `references/keeper.md` for the full role. Set it up:
 
-1. **Name it.** Ask the owner to pick the keeper's name — a *named* role gets
-   treated as staff; an unnamed one gets ignored.
+1. **Leave the name for handover.** The keeper introduces itself and asks the owner
+   to name it at handover (`setup/INTERVIEW.md` Phase 4) — a name the owner chose is
+   theirs; a name you chose and they approved is still yours. Use a placeholder here
+   and fill it in then. (A *named* role gets treated as staff; an unnamed one gets
+   ignored — which is why the naming happens, just not by you.)
 2. **Pick the duty preset.** `INTEL` (for `config.type` intel) / `DATA` (for
    `config.type` data) — plus `FULL-RUN`, which is **not a type** but an autonomy
    level (end-to-end operation incl. proactive alerts) layered on either. This
