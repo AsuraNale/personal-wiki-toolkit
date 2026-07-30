@@ -16,6 +16,8 @@ Subcommands:
     promote <url>       mark a Silver item promoted (after its content reached Gold)
     dismiss <url> [reason...]   dismiss a Silver item with a reason (audited; never resurfaces)
     stats               tier counts, Silver aging, recent dismiss reasons, last fetch round
+    evidence            read-only evidence block to PASTE into a QC report or handover
+                        (retyping these numbers is how a real report got three wrong)
     selftest            environment + config + schema sanity check (clear exit codes)
     run                 fetch, then print what the agent should do next (judging is NOT automated)
 
@@ -149,6 +151,53 @@ def library_shapes(config):
                 "type %r is not one of %s (a typo here silently mis-shapes the whole library)"
                 % (bad[0], "/".join(VALID_TYPES)), "")
     return [v.lower() for v in vals], "", ""
+
+
+# The injection red line is mandatory in every library's own memory file (SKILL.md
+# rule 8). Libraries are written in the OWNER's language, so this cannot be checked by
+# matching English prose — a Chinese library writes "不是指令" and would fail a literal
+# match. New libraries carry a language-independent marker; older ones are matched on a
+# small multilingual signal set so they are not broken by a check added after the fact.
+INJECTION_MARK = "pwt:injection-rule"
+INJECTION_HINTS = (
+    "not the owner's instructions", "are not instructions", "not your instructions",
+    "data, not instructions", "not instructions",
+    "不是指令", "不是给你的指令", "非指令",
+)
+MEMORY_FILES = ("CLAUDE.md", "AGENTS.md")
+
+
+def memory_files(root):
+    """The library's own agent-memory files that actually exist."""
+    return [root / n for n in MEMORY_FILES if (root / n).is_file()]
+
+
+def injection_rule_state(root):
+    """(state, detail) for the injection red line in this library's memory files.
+
+    state: "marked" | "unmarked" | "missing" | "no-memory-file"
+    """
+    files = memory_files(root)
+    if not files:
+        return "no-memory-file", "no CLAUDE.md / AGENTS.md in the library root"
+    marked, hinted, bare = [], [], []
+    for f in files:
+        try:
+            body = f.read_text(encoding="utf-8", errors="replace").lower()
+        except OSError as e:
+            return "missing", "%s unreadable (%s)" % (f.name, e)
+        if INJECTION_MARK in body:
+            marked.append(f.name)
+        elif any(h in body for h in INJECTION_HINTS):
+            hinted.append(f.name)
+        else:
+            bare.append(f.name)
+    if bare:
+        return "missing", "%s carries no injection red line" % ", ".join(bare)
+    if hinted:
+        return "unmarked", "found in %s by wording; add <!-- %s --> so it stays checkable" % (
+            ", ".join(hinted), INJECTION_MARK)
+    return "marked", ", ".join(marked)
 
 
 def threshold_of(config):
@@ -303,6 +352,67 @@ def cmd_fetch(root, config):
     return 0
 
 
+# ---------------------------------------------------------------- evidence (read-only)
+
+
+def cmd_evidence(root, config):
+    """Print a paste-able evidence block for a QC report or a handover message.
+
+    Why this exists: a real QC report carried three wrong numbers — not because they
+    were computed too early (the report was written last), but because they were
+    RETYPED by hand. Two of the three could already have been copied from `stats`
+    and `coverage`; the third (a file-identity hash) had no command at all.
+
+    So this is not a new rule telling anyone to be careful. It makes the correct
+    path the lazy one: run one command, paste one block. Read-only — it writes
+    nothing and changes nothing.
+    """
+    import hashlib
+    conn = connect(root)
+    stamp = now_ts()
+    name = config.get("name", "?")
+    lines = ["```", "evidence · %s · generated_at %s" % (name, stamp),
+             "  (produced by: python scripts/pipeline.py evidence — paste, do not retype)", ""]
+
+    rows = dict(conn.execute("SELECT status, COUNT(*) FROM seen GROUP BY status").fetchall())
+    total = sum(rows.values())
+    lines.append("Bronze (seen): %s  = %d total"
+                 % (" / ".join("%s %d" % (k, rows[k]) for k in sorted(rows)) or "empty", total))
+
+    pend = conn.execute("SELECT COUNT(*) FROM silver WHERE promoted=0 AND dismissed=0").fetchone()[0]
+    prom = conn.execute("SELECT COUNT(*) FROM silver WHERE promoted=1").fetchone()[0]
+    dism = conn.execute("SELECT COUNT(*) FROM silver WHERE dismissed=1 AND promoted=0").fetchone()[0]
+    oldest = conn.execute("SELECT MIN(judged_at) FROM silver WHERE promoted=0 AND dismissed=0").fetchone()[0]
+    lines.append("Silver: %d awaiting / %d promoted / %d dismissed%s"
+                 % (pend, prom, dism, ("   oldest pending %s" % oldest[:10]) if oldest else ""))
+
+    bad = conn.execute("SELECT COUNT(*) FROM fetch_log f WHERE ts = "
+                       "(SELECT MAX(ts) FROM fetch_log WHERE source = f.source) "
+                       "AND status IN ('gap','failed','blocked')").fetchone()[0]
+    srcs = conn.execute("SELECT COUNT(DISTINCT source) FROM fetch_log").fetchone()[0]
+    lines.append("Sources: %d known, %d unhealthy on their latest round" % (srcs, bad))
+
+    # File identity — the one value with no existing command, and the one that was wrong.
+    mem = memory_files(root)
+    if len(mem) >= 2:
+        digests = {f.name: hashlib.sha256(f.read_bytes()).hexdigest() for f in mem}
+        same = len(set(digests.values())) == 1
+        lines.append("Memory files: %s %s (sha256 %s)"
+                     % (" == ".join(digests), "identical" if same else "DIFFER",
+                        list(digests.values())[0][:12]))
+    elif mem:
+        lines.append("Memory files: only %s present" % mem[0].name)
+    else:
+        lines.append("Memory files: none found")
+
+    inj_state, inj_detail = injection_rule_state(root)
+    lines.append("Injection red line: %s (%s)" % (inj_state, inj_detail))
+    lines += ["```"]
+    conn.close()
+    print("\n".join(lines))
+    return 0
+
+
 # ---------------------------------------------------------------- add (manual Bronze entry)
 
 
@@ -345,6 +455,52 @@ def cmd_add(root, config, args):
 # ---------------------------------------------------------------- apply (judgments -> Silver)
 
 
+# G2 — Cadence artefacts need one naming convention before anything can count them.
+# Four real libraries used four different schemes (`2026-07-22-gold.md`,
+# `qc-2026-07-28.md`, `2026-07-21.md`, `2026-07-10.md`), so "how many rounds since
+# the last QC" was not merely unanswered — it was uncomputable.
+CADENCE_KINDS = ("qc", "run", "calibration", "review")
+CADENCE_RE = re.compile(r"^(%s)-(\d{4}-\d{2}-\d{2})" % "|".join(CADENCE_KINDS))
+
+
+def last_cadence_run(root, config, kind):
+    """Date string of the most recent `<kind>-<date>.md` under the pipeline logs dir."""
+    logs = pipeline_dir(root, config) / "logs"
+    if not logs.is_dir():
+        return None
+    dates = []
+    for f in logs.iterdir():
+        m = CADENCE_RE.match(f.name)
+        if m and m.group(1) == kind:
+            dates.append(m.group(2))
+    return max(dates) if dates else None
+
+
+def cadence_debt(root, config, conn, kind="qc"):
+    """One line on how overdue a Cadence is, or '' when there is nothing to say.
+
+    G3 — this rides on the source-health banner rather than inventing a new channel:
+    that banner is the one mechanism with evidence of actually working (it reported
+    5-of-5 sources down, honestly, in production). It already prints every round and
+    users already read it.
+
+    ⚠️ Deliberately NOT a Gate. A Cadence that is overdue means catch up, not stop —
+    blocking here would stall the library over a missed report.
+    """
+    last = last_cadence_run(root, config, kind)
+    rounds = conn.execute("SELECT COUNT(*) FROM fetch_log WHERE ts > ?",
+                          (last or "",)).fetchone()[0] if last else None
+    if last is None:
+        total = conn.execute("SELECT COUNT(*) FROM fetch_log").fetchone()[0]
+        if total < 5:
+            return ""   # too early to nag
+        return ("cadence: no %s report found in %s (expected %s-<date>.md) after %d collection rounds"
+                % (kind.upper(), pipeline_dir(root, config).name + "/logs", kind, total))
+    if rounds and rounds >= 5:
+        return "cadence: last %s was %s — %d collection rounds ago" % (kind.upper(), last, rounds)
+    return ""
+
+
 def source_health(conn):
     """One-line source-health banner from the latest fetch status per source.
     A failed/gap/blocked fetch must never be silently read as 'a quiet day'. The three bad
@@ -374,6 +530,15 @@ def source_health(conn):
         return "WARNING source health: " + " | ".join(parts)
     return ("source health: all %d sources ok (%s) - a short brief today is a genuinely quiet "
             "day, not a fetch failure" % (len(per), ", ".join(sorted(per))))
+
+
+def health_banner(root, config, conn):
+    """Source health + any Cadence debt, as one block for the draft brief."""
+    parts = [source_health(conn)]
+    debt = cadence_debt(root, config, conn, "qc")
+    if debt:
+        parts.append("WARNING " + debt)
+    return "\n> ".join(p for p in parts if p)
 
 
 def write_draft_brief(root, config, conn):
@@ -406,7 +571,7 @@ def write_draft_brief(root, config, conn):
         "",
         "# Auto intel brief - %s - %s" % (name, day),
         "",
-        "> **%s**" % source_health(conn),   # a short/empty brief must never be misread as 'nothing happened'
+        "> **%s**" % health_banner(root, config, conn),   # a short/empty brief must never be misread as 'nothing happened'
         "",
         "> Silver draft: fetched by pipeline, judged by the host agent, kept at >= %.2f. "
         "Promote items into Gold notes/briefs, or dismiss with a reason "
@@ -427,6 +592,57 @@ def write_draft_brief(root, config, conn):
     lines.append("*generated by pipeline.py apply - regenerated (union) on every apply of the day*")
     path.write_text("\n".join(lines), encoding="utf-8")
     return path, len(rows)
+
+
+def constant_score_warning(judgments, seen_source):
+    """F3 — warn when one source's items all carry an identical score.
+
+    In a real round 76% of candidates got a per-source constant (52 items at 0.15,
+    47 at 0.16, 47 distinct real papers all at 0.28), which is what "judge substance,
+    not keywords" is meant to prevent — and the script that produced them was deleted,
+    so the reasoning could not be reconstructed.
+
+    ⚠️ A WARNING, never a rejection: a machine cannot tell a lazy blanket score from a
+    correct one. In that same round the 52 items at 0.15 really were all issue-index
+    pages, and one score for all of them was the right call. Only a person can tell
+    the two apart — so this reports, and lets the person decide.
+    """
+    by_source = {}
+    for j in judgments:
+        src = seen_source.get(j.get("url"), "?")
+        try:
+            rel = float(j.get("relevance", 0))
+        except (TypeError, ValueError):
+            continue
+        by_source.setdefault(src, []).append(rel)
+    flagged = []
+    for src, scores in by_source.items():
+        if len(scores) >= 5 and len(set(scores)) == 1:
+            flagged.append("%s: %d items all scored %.2f" % (src, len(scores), scores[0]))
+    if not flagged:
+        return ""
+    return ("NOTE constant scores — %s. If that is a real judgement (e.g. they are all "
+            "index pages), fine; if it is one blanket score standing in for reading them, "
+            "it is what rule 3 forbids. Nobody but you can tell." % "; ".join(sorted(flagged)))
+
+
+def record_calibration(root, config, entries):
+    """①-b — append this round's judgments to _pipeline/calibration.jsonl.
+
+    Item-level judgement has never been persisted, so "8/10 this month vs 7/10 last
+    month" compared two different random samples and was never actually comparable.
+    With a durable record, the next A1 round can re-score the SAME items and produce
+    the first number that means anything.
+
+    Append-only, one JSON object per line, no schema change.
+    """
+    if not entries:
+        return
+    path = pipeline_dir(root, config) / "calibration.jsonl"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("a", encoding="utf-8") as fh:
+        for e in entries:
+            fh.write(json.dumps(e, ensure_ascii=False) + "\n")
 
 
 def cmd_apply(root, config):
@@ -450,6 +666,8 @@ def cmd_apply(root, config):
     conn = connect(root)
     ts = now_ts()
     kept, low, skipped = 0, 0, 0
+    seen_source = dict(conn.execute("SELECT url, source FROM seen").fetchall())
+    calib = []
     for j in judgments:
         if not isinstance(j, dict) or not j.get("url"):
             skipped += 1
@@ -482,13 +700,24 @@ def cmd_apply(root, config):
             kept += 1
         else:
             low += 1
+        # (1)-b: persist the item-level judgement so a later calibration round can
+        # re-score THE SAME items. Without this, "8/10 this month vs 7/10 last month"
+        # compares two different random samples and means nothing.
+        calib.append({"ts": ts, "url": url, "source": seen_source.get(url, "?"),
+                      "title": title, "topic": topic, "relevance": rel,
+                      "threshold": thr, "verdict": "kept" if rel >= thr else "low",
+                      "one_line": j.get("one_line", "")})
     conn.commit()
     path, n_draft = write_draft_brief(root, config, conn)
     n_pending = write_pending(root, config, conn)  # judged items leave pending.json
     conn.close()
+    record_calibration(root, config, calib)
     log(root, config, "apply: %d kept (>=%.2f) / %d low / %d skipped; draft brief -> %s "
         "(%d items, union of today); %d still pending"
         % (kept, thr, low, skipped, path.name, n_draft, n_pending))
+    warn = constant_score_warning(judgments, seen_source)
+    if warn:
+        log(root, config, warn)
     return 0
 
 
@@ -654,6 +883,23 @@ def cmd_selftest(root_hint=None):
         if not check("threshold in (0,1]", 0 < thr <= 1, "keep=%s" % thr):
             failures_cfg.append("threshold")
 
+        # F1 — the injection red line is mandatory in the library's own memory file
+        # (SKILL.md rule 8) and was, until now, held up by prose alone. A real build
+        # dropped it. Graded on purpose: selftest also runs mid-scaffold, before the
+        # memory file exists, so "not written yet" must not read the same as "written
+        # without the rule".
+        inj_state, inj_detail = injection_rule_state(root)
+        if inj_state == "marked":
+            check("injection red line present in memory file", True, inj_detail)
+        elif inj_state == "unmarked":
+            check("injection red line present in memory file", True, inj_detail)
+        elif inj_state == "no-memory-file":
+            check("injection red line (memory file not written yet)", True,
+                  "no CLAUDE.md/AGENTS.md yet — re-run selftest after scaffolding")
+        else:
+            check("injection red line present in memory file", False, inj_detail)
+            failures_cfg.append("injection-red-line")
+
         try:
             pdir = pipeline_dir(root, config)
             (pdir / "logs").mkdir(parents=True, exist_ok=True)
@@ -727,6 +973,7 @@ def main(argv=None):
     p.add_argument("url")
     p.add_argument("reason", nargs="*", help="why this item is not relevant (recommended)")
     sub.add_parser("stats", help="tier counts, Silver aging, dismiss reasons, fetch health")
+    sub.add_parser("evidence", help="read-only: a paste-able evidence block for QC reports and handover (never retype these numbers)")
     sub.add_parser("selftest", help="check environment, config and db schema")
     sub.add_parser("run", help="fetch, then print the judging handoff instructions")
     args = ap.parse_args(argv)
@@ -751,6 +998,8 @@ def main(argv=None):
         return cmd_dismiss(root, config, args.url, " ".join(args.reason))
     if args.cmd == "stats":
         return cmd_stats(root, config)
+    if args.cmd == "evidence":
+        return cmd_evidence(root, config)
     if args.cmd == "run":
         return cmd_run(root, config)
     return 0
