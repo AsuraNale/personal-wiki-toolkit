@@ -27,8 +27,12 @@ user an action.
 **What this gives up, stated plainly:** the failure it caught was real — a user
 once finished a whole session believing a library had been built, inside an
 assistant with no filesystem at all. That failure can happen again, and now
-nothing will stop it. The v0.1.3 entry below is left exactly as published;
-withdrawing a feature is not a reason to edit the record of having shipped it.
+nothing will stop it. The v0.1.3 entry below is left as published — withdrawing a
+feature is not a reason to edit the record of having shipped it — with one
+exception, recorded here: its *Verified at the document level only* section
+claimed seven behaviours and then named four, so the seven are now listed. A
+count you cannot check against the list is not a record. Nothing else in that
+entry was touched.
 
 The constraint that made it hard is unchanged and will face any future attempt:
 **an agent cannot prove from its own side that where it wrote is where the user

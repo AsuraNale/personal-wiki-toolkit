@@ -109,7 +109,7 @@ before building one.
 | **Referenced by** | **core:** `references/etl-guide.md` § Raw observations auto-append; only analysis is curated<br/>**examples:** `examples/etl-kb/` |
 | **Evidence** | `references/etl-guide.md` § Raw observations auto-append — a real build gated raw snapshots behind human promotion by *proposing* weekly `INSERT`s; **the table never grew a second data point.** Separately: **four highly active libraries with no draft step produced zero human Gold** (420 rounds/1,109 rows · 165/89,136 · 127/297 · 44/9,533) |
 | **Status** | ⚠️ **`proposed`** |
-| **Version history** | Formulated 2026-07-27. **Named descriptively on purpose**: the concept was revised twice during the very discussion that produced it, it is not implemented anywhere, and a coined term would freeze it early. **Name it properly after 2–3 real libraries have run on it.** |
+| **Version history** | Formulated 2026-07-27. **Named descriptively on purpose**: the concept was revised twice during the very discussion that produced it, it is not implemented anywhere, and a coined term would freeze it early. **Name it properly after 2–3 real libraries have run on it.**<br/>**Correction (v0.1.4):** the message on `9a6ac6f` said the "spec lives nowhere yet" contradiction was one "this commit created". It was not. `git log -S` places the Shape B section in `medallion.md` at `535d71f`, several commits earlier, so the contradiction shipped inside v0.1.3 itself. The fix was right; the attribution was wrong, and a wrong attribution sends the next reader looking in the wrong release |
 
 ## 3. Curation — `active`
 
@@ -138,7 +138,7 @@ before building one.
 | **Spec lives in** | `references/pipeline-discipline.md` § *A failed fetch is not an empty result* |
 | **Enforced in code by** | `scripts/fetch_rss.py` (`FetchGap` / `FetchFailed` / `FetchBlocked` + two-layer classification) · the `fetch_log` table · the health banner in `scripts/pipeline.py` · assertions in `tests/test_pipeline.py` |
 | **Does NOT cover** | content quality · relevance · tiering |
-| **Referenced by** | **core:** `SKILL.md` (the failed-fetch rule) · `MANUAL.md` · `references/{pipeline-discipline,etl-guide,medallion,storage,cloud}.md` · `setup/SCAFFOLD.md` · `scripts/{fetch_rss,pipeline}.py`<br/>**examples/tests:** `examples/etl-kb/{fetch_quakes.py,CLAUDE.md,keeper.md}` ← **the cross-type reuse evidence** · `examples/intel-kb/*` · `tests/test_pipeline.py` |
+| **Referenced by** | **core:** `SKILL.md` § *A failed fetch is not an empty result* · `MANUAL.md` · `references/{pipeline-discipline,etl-guide,medallion,storage,cloud}.md` · `setup/SCAFFOLD.md` · `scripts/{fetch_rss,pipeline}.py`<br/>**examples/tests:** `examples/etl-kb/{fetch_quakes.py,CLAUDE.md,keeper.md}` ← **the cross-type reuse evidence** · `examples/intel-kb/*` · `tests/test_pipeline.py` |
 | **Evidence** | A cloud round lost **7 of 8 sources** to egress policy and still "succeeded" — only the health banner revealed the brief had been built from the single source that happened to be allowed. Before `blocked` existed, that same denial was filed as `gap`, i.e. the user was told to fix a config that was already correct |
 | **Status** | `active` |
 | **Version history** | v0.1.1 four states → **v0.1.2 adds `blocked`** (policy refusal ≠ "nothing there" ≠ "retry later") |
