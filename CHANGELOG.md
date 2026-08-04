@@ -6,6 +6,60 @@ plain-language walkthrough is [MANUAL.md](MANUAL.md) (中文:[MANUAL.zh.md](MANU
 
 ---
 
+## v0.1.5 — 2026-08-04
+
+An interior release: **no new features, and nothing about using this changes.** It
+takes rules the toolkit already stated and moves them into code, because the
+evidence says a rule held up by prose alone does not survive contact with a real
+build. Of the rules a case study could actually observe, every one that lived only
+in a document had been dropped by the agent following it, and every one a script
+enforced had held.
+
+### Rules that were only written down are now checked
+
+- **The setup record has to be complete.** `pipeline.py selftest` now fails when
+  `config.json` carries no `$intake`, when a decision that library's shape owes is
+  missing, or when any decision is marked `agent-inferred`. The old check was a
+  line in a checklist asking that nothing be `agent-inferred` — which stays true
+  when the whole record is absent. A real library shipped exactly that way, with a
+  librarian never offered and never mentioned.
+- **A library built before that record existed can say so.** Write
+  `"$intake": { "$unrecorded": "<why>" }` and it passes, printing that line on
+  every run afterwards. Nobody is asked to invent a provenance they cannot stand
+  behind — a repair path that requires a small lie is not a repair path.
+- **Dismissing a source you already cited raises a flag.** When `dismiss` finds
+  that URL in `_pipeline/answers/`, `notes/` or `briefs/`, it names the file and
+  records it in `_pipeline/retractions.jsonl`. An answer given last week and
+  quietly undermined this week was the one claim in the library nobody was
+  re-checking.
+- **How the library was built is on the record.** `built_with.skill_source` says
+  where the skill was read from; `scripts_version` is pasted rather than typed, and
+  `selftest` compares it against the scripts actually present. `toolkit_version`
+  keeps its old meaning — the version of the config template — now stated in the
+  file instead of assumed.
+- **The Chinese documents are checked against the English.** A test compares
+  `CHANGELOG.md` and `SAFETY.md` against their `.zh.md` counterparts section by
+  section. Last release had no such test, and an English-only edit sat unnoticed
+  for four days.
+
+### What this release does not do
+
+- **It cannot tell you anything.** The dismissal flag prints where the command
+  runs, which is the assistant's side, not yours. It makes the fact available; a
+  keeper still has to pass it on. That half stays a written rule.
+- **It does not catch every citation.** URLs are matched in their common
+  spellings, not all of them, and a quiet result is not proof that nothing cites
+  the source.
+- **It does not check `MANUAL.zh.md`.** That file is written independently rather
+  than translated, so comparing its structure would be meaningless. It is excluded
+  deliberately, with the reason written where the exclusion is rather than buried
+  in a list of suppressed failures.
+- **It still cannot tell whose words are in the file.** A record can claim a
+  decision was the owner's, and nothing can verify that. The gap is known, and
+  closing it needs a change to how the record is shaped.
+
+---
+
 ## v0.1.4 — 2026-07-30
 
 ### Withdrawn: the Preflight gate

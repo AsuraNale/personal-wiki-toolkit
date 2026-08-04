@@ -11,7 +11,7 @@ description: >-
 license: MIT
 metadata:
   author: personal-wiki-toolkit
-  version: "0.1.4"
+  version: "0.1.5"
 ---
 
 # Personal Wiki Toolkit

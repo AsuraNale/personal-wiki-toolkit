@@ -101,20 +101,22 @@ Details and per-platform caveats: `docs/compatibility.md`.
 
 ## Status
 
-**v0.1.4 — pre-1.0.** The build path is validated end-to-end on **three agent
+**v0.1.5 — pre-1.0.** The build path is validated end-to-end on **three agent
 ecosystems** — Claude Code (local *and* cloud), Tencent WorkBuddy, and Codex —
 each a fresh agent that built a working library from just this repo plus a topic,
 unaided, in Level-0 *and* full-SQLite modes. A later live session exercised the
 Intake gate along its happy path.
 
-0.1.4 is an interior release: it moves rules that were held up by prose alone
-into code, and redesigns the setup path around what a real user actually found
-tiresome. Four rules **remain unverified**, and the reason is worth reading —
-each is addressed to the agent, so no script is in a position to enforce or
-confirm them. See [CHANGELOG.md](CHANGELOG.md) § *What was verified, and what
-was not*.
+0.1.5 is a second interior release, and it exists because of what 0.1.4 could not
+verify. Both rules left unverified there were addressed to the agent, so no script
+was in a position to confirm them; `selftest` and `dismiss` now enforce what a
+script can. **One half stays out of reach and is marked as such**: code can make a
+retraction *available*, but only the keeper can actually tell the owner. Nothing
+about using the toolkit changes in this release — see [CHANGELOG.md](CHANGELOG.md)
+§ *v0.1.5* for what is checked now and what still is not.
 
-**What 0.1.3 changed**, in one line each — full log in
+**What 0.1.3 changed** — the last release with user-visible changes, one line each;
+full log in
 [CHANGELOG.md](CHANGELOG.md) (中文:[CHANGELOG.zh.md](CHANGELOG.zh.md)):
 
 - **It stops pretending.** *(Preflight — withdrawn in v0.1.4; see that entry.)*

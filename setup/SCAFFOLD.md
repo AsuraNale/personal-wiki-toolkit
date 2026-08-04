@@ -39,6 +39,13 @@ The layout above is **Shape A** (adjudication: intel / import). Check
 - **≥3 topics** → one directory per topic, named from the topic's `key`
   (`notes/agent-tooling/`). Agree the directory name **while drafting the topics
   table** — retro-filing is how notes end up in two places at once.
+  ⚠️ **Agree the name then; create the directory when that topic gets its first
+  Gold note.** What has to be settled early is the *name* — that is what stops the
+  same topic being filed two ways later. The *directory* settles nothing, and
+  creating six of them on day one means the owner's first look at their new library
+  is five empty folders, which reads as "this thing is empty" on the one day they
+  are deciding whether to keep using it. One real build did exactly that: six
+  topics, six directories, five of them still empty.
 
 **Shape A · import** — `notes/` is replaced by the approved category tree
 (index-in-place mode leaves user files where they are; the tree then only holds
@@ -53,6 +60,13 @@ NEW notes).
 ├── briefs/              periodic drafts for the human to react to (the cadence)
 └── _pipeline/logs/
 ```
+**Shape B's Intake record** — `setup/INTERVIEW.md` is written for intel and
+`setup/IMPORT.md` for import, so until now nothing said which decisions a data
+library owes. It owes five: **`shape` · `domain` · `sources` · `cadence` ·
+`keeper`**. Not `topics` (it isn't organized by topic) and not `threshold` (it
+adjudicates nothing). `sources` here means where the data comes from — an API, a
+dataset, a scrape — not RSS feeds. `pipeline.py selftest` checks this list.
+
 ⚠️ **Do not create `_pipeline/silver/` or the `seen`/`silver` tables for Shape B.**
 There is no per-row adjudication queue here; facts land final on write. A recall
 library built with the Shape A scaffold left its Silver at 21 rows, 0 promoted /
@@ -231,8 +245,18 @@ If demand-tracking is on, the keeper logs out-of-library queries with
       pasted, not retyped**: a real QC report got three of them wrong by hand.
       ⚠️ This proves the counts are genuine; it does **not** prove the owner read or
       understood them. Don't record it as if it did.
-- [ ] **Intake recorded**: `config.json` carries `$intake`, and nothing in it is
-      `agent-inferred` (see `setup/INTERVIEW.md` § Intake)
+- [ ] **Intake recorded**: `config.json` carries `$intake`, every decision its shape
+      owes is on record, and nothing in it is `agent-inferred` (see
+      `setup/INTERVIEW.md` § Intake). ⭐ **`pipeline.py selftest` now fails on all
+      three** — this line used to be the only thing checking, and it could not see a
+      field that was missing entirely: "nothing in it is `agent-inferred`" stays true
+      when there is no record at all, which is how one real library shipped with
+      `keeper` never recorded and never discussed
+- [ ] **Build provenance recorded**: `config.json` carries `built_with` with
+      `skill_source` (where you READ the skill from — a URL, or a local cache path)
+      and `scripts_version` **pasted** from `pipeline.py stats`, not typed. The
+      source is the load-bearing part: a version number looks the same whether or
+      not it is true
 - [ ] **Shape B only — the human loop is actually wired**, both halves:
       - [ ] ① a draft is produced on a stated cadence (EOD / weekly), not "when
             someone remembers" — without something to react to, nobody starts

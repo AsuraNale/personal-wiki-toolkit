@@ -49,5 +49,15 @@
     "threshold": { "value": 0.7, "decided_by": "default-accepted" },
     "keeper": { "value": true, "decided_by": "user-selected" }
   },
-  "toolkit_version": "0.1.4"
+  "$comment_intake_required": "Which decisions must be on record depends on the library's SHAPE: intel needs all seven above; import needs shape/domain/categories/mode/keeper (setup/IMPORT.md); data needs shape/domain/sources/cadence/keeper — no topics, no threshold. `pipeline.py selftest` checks this. A library built before the record existed declares that honestly instead of inventing one: \"$intake\": { \"$unrecorded\": \"<why>\" } — it passes, and says so on every run.",
+  "built_with": {
+    "$comment": "How this library was actually built. toolkit_version below records the version of the TEMPLATE this file was copied from, which is NOT necessarily the version of the spec the building agent followed — one real library carries a config a version ahead of the cached skill that built it, and nothing on disk showed the difference. skill_source is the field that matters: a version number looks the same whether or not it is true, but 'a local cached copy' tells you the version is unverifiable. Say where you READ the skill from.",
+    "skill_source": "https://github.com/<owner>/personal-wiki-toolkit (read at build time)",
+    "skill_version": "0.1.5",
+    "$comment_skill_version": "a DECLARED value — the agent's own account of which spec it followed. Nothing can check it; do not treat it as evidence.",
+    "scripts_version": "0.1.5",
+    "$comment_scripts_version": "PASTE this from `python scripts/pipeline.py stats` — do not type it. selftest compares it against the scripts actually present, so a typed guess shows up as a mismatch."
+  },
+  "toolkit_version": "0.1.5",
+  "$comment_toolkit_version": "the version of the CONFIG TEMPLATE this file came from. For what the build actually ran on, see built_with."
 }
