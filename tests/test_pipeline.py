@@ -12,6 +12,7 @@ dismissed-never-resurfaces, timezone/DST-correct draft window, and indexing.
 """
 import json
 import os
+import re
 import shutil
 import sqlite3
 import sys
@@ -36,6 +37,7 @@ SANDBOX = _TMP / "kb"
 def check(name, cond, detail=""):
     (PASS if cond else FAIL)[0] += 1
     print(("  PASS " if cond else "  FAIL ") + name + ((" - " + str(detail)) if detail and not cond else ""))
+    return bool(cond)
 
 
 def fresh_sandbox():
@@ -53,6 +55,26 @@ def fresh_sandbox():
         ],
         "thresholds": {"keep": 0.7}, "cadence": "daily",
         "paths": {"notes": "notes", "briefs": "briefs", "inbox": "inbox", "pipeline": "_pipeline"},
+        # A scaffolded library carries the template's explanatory $comment, and that
+        # comment names the forbidden value verbatim. Keeping it here means the whole
+        # suite runs against the trap: any check that text-matches the config instead
+        # of reading decided_by turns every other test in this file red.
+        "$intake": {
+            "$comment": "decided_by is one of user-typed | user-selected | "
+                        "default-accepted. 'agent-inferred' is never allowed.",
+            "shape": {"value": "intel", "decided_by": "user-selected"},
+            "domain": {"value": "a sandbox library", "decided_by": "user-typed"},
+            "topics": {"value": ["t1"], "decided_by": "user-selected"},
+            "sources": {"value": ["feed-a", "hn-b"], "decided_by": "user-selected"},
+            "cadence": {"value": "daily", "decided_by": "default-accepted"},
+            "threshold": {"value": 0.7, "decided_by": "default-accepted"},
+            "keeper": {"value": True, "decided_by": "user-selected"},
+        },
+        "built_with": {
+            "skill_source": "tests/fresh_sandbox (synthetic library)",
+            "skill_version": pipeline.TOOLKIT_VERSION,
+            "scripts_version": pipeline.TOOLKIT_VERSION,
+        },
         "toolkit_version": pipeline.TOOLKIT_VERSION,
     }
     (SANDBOX / "config.json").write_text(json.dumps(cfg, indent=2), encoding="utf-8")
@@ -578,27 +600,345 @@ def test_evidence_and_calibration():
     check("evidence is read-only (ledger untouched)", (root / "intel.db").stat().st_mtime == before)
 
 
+# ---------------------------------------------------------------- v0.1.5 mechanisms
+
+
+def _intake(**fields):
+    """A $intake block carrying the template's own explanatory comment (see
+    fresh_sandbox) plus whatever records the caller wants."""
+    out = {"$comment": "'agent-inferred' is never allowed anywhere."}
+    out.update(fields)
+    return out
+
+
+FULL_INTAKE = _intake(
+    shape={"value": "intel", "decided_by": "user-selected"},
+    domain={"value": "d", "decided_by": "user-typed"},
+    topics={"value": ["t"], "decided_by": "user-selected"},
+    sources={"value": ["s"], "decided_by": "user-selected"},
+    cadence={"value": "daily", "decided_by": "default-accepted"},
+    threshold={"value": 0.7, "decided_by": "default-accepted"},
+    keeper={"value": True, "decided_by": "user-selected"},
+)
+
+
+def test_intake_record():
+    print("== R1/R2 intake record: completeness, agent-inferred, the legacy exit ==")
+
+    def st(intake, shapes=("intel",)):
+        cfg = {} if intake is None else {"$intake": intake}
+        return pipeline.intake_state(cfg, list(shapes))
+
+    # ⛔ SPEC 1.7 — the trap. templates/config.example.json explains the rule in a
+    # $comment containing "agent-inferred" verbatim, and scaffold copies that template
+    # into every library, so a full-text match would fail every correct library there
+    # is. Both halves matter: the second check keeps the first from going vacuous if
+    # the template ever stops carrying the string.
+    tpl_text = (REPO / "templates/config.example.json").read_text(encoding="utf-8")
+    check("the template really does contain the forbidden string (else the next check "
+          "proves nothing)", "agent-inferred" in tpl_text)
+    check("the shipped template's own $intake passes — a text match would fail it",
+          pipeline.intake_state(json.loads(tpl_text), ["intel"])[0] == "ok",
+          pipeline.intake_state(json.loads(tpl_text), ["intel"]))
+
+    check("complete record -> ok", st(FULL_INTAKE)[0] == "ok", st(FULL_INTAKE))
+
+    # The case the old exit checklist let through: the field is simply not there, so
+    # "nothing in it is agent-inferred" stayed true and the check passed.
+    check("$intake absent -> absent (a FAILURE, not a lenient legacy pass)",
+          st(None)[0] == "absent")
+    absent_msg = pipeline.unrecorded_hint()
+    check("the failure ships its own repair path, paste-able",
+          '"$unrecorded"' in absent_msg and "Never invent a decided_by" in absent_msg)
+
+    # ⭐ The case Phrolova's first design would have waved through, and the one with a
+    # real library behind it: six of seven recorded, `keeper` never discussed.
+    six = dict(FULL_INTAKE)
+    del six["keeper"]
+    s, probs, _ = st(six)
+    check("6 of 7 recorded -> bad, and it names the missing decision",
+          s == "bad" and any("keeper" in p for p in probs), probs)
+
+    inferred = dict(FULL_INTAKE, domain={"value": "d", "decided_by": "agent-inferred"})
+    check("agent-inferred -> bad", st(inferred)[0] == "bad")
+    typo = dict(FULL_INTAKE, domain={"value": "d", "decided_by": "user_typed"})
+    check("a decided_by typo -> bad (the enum is checked, not just the one bad value)",
+          st(typo)[0] == "bad", st(typo))
+    shaped = dict(FULL_INTAKE, domain={"value": "d", "decided_by": "default-accepted"})
+    check("default-accepted on `domain` -> bad (it has no sensible default, so a "
+          "default there means it was really inferred)", st(shaped)[0] == "bad")
+    malformed = dict(FULL_INTAKE, keeper=True)
+    check("a bare value instead of {value, decided_by} -> bad", st(malformed)[0] == "bad")
+
+    # The honest exit for a library built before the record existed. It must not be
+    # possible to reach green by inventing a provenance, so the escape is an
+    # admission — and it stays visible afterwards.
+    s, _, note = st({"$unrecorded": "built before v0.1.3; provenance unknown"})
+    check("$unrecorded with a reason -> unrecorded (passes, scarred)",
+          s == "unrecorded" and "provenance unknown" in note)
+    check("$unrecorded with an empty reason -> bad",
+          st({"$unrecorded": "   "})[0] == "bad")
+    check("$unrecorded does NOT waive a false claim (legacy is not a licence)",
+          st({"$unrecorded": "old library",
+              "domain": {"value": "d", "decided_by": "agent-inferred"}})[0] == "bad")
+
+    # Shape-dependence: setup/IMPORT.md runs its own Intake gate with different keys,
+    # and a data library has neither topics nor a threshold to record.
+    imp = _intake(shape={"value": "import", "decided_by": "user-selected"},
+                  domain={"value": "d", "decided_by": "user-typed"},
+                  keeper={"value": True, "decided_by": "user-selected"},
+                  mode={"value": "index-in-place", "decided_by": "user-selected"})
+    check("import shape without `categories` -> bad", st(imp, ["import"])[0] == "bad")
+    imp["categories"] = {"value": ["a"], "decided_by": "user-selected"}
+    check("import shape with its own key set -> ok", st(imp, ["import"])[0] == "ok",
+          st(imp, ["import"]))
+    dat = _intake(shape={"value": "data", "decided_by": "user-selected"},
+                  domain={"value": "d", "decided_by": "user-typed"},
+                  sources={"value": ["api"], "decided_by": "user-typed"},
+                  cadence={"value": "daily", "decided_by": "default-accepted"},
+                  keeper={"value": True, "decided_by": "user-selected"})
+    check("data shape needs no topics/threshold -> ok", st(dat, ["data"])[0] == "ok",
+          st(dat, ["data"]))
+    check("a composite library owes the UNION, so naming an extra shape can only add "
+          "requirements", st(dat, ["data", "intel"])[0] == "bad")
+
+    # End to end through selftest, which is where a build actually meets this.
+    cfg = fresh_sandbox()
+    os.chdir(SANDBOX)
+    check("selftest on a freshly scaffolded library -> 0", pipeline.cmd_selftest() == 0)
+    del cfg["$intake"]
+    (SANDBOX / "config.json").write_text(json.dumps(cfg, indent=2), encoding="utf-8")
+    check("selftest with no $intake -> 2 (config problem)", pipeline.cmd_selftest() == 2)
+    cfg["$intake"] = {"$unrecorded": "built before the record existed"}
+    (SANDBOX / "config.json").write_text(json.dumps(cfg, indent=2), encoding="utf-8")
+    check("selftest after declaring it unrecorded -> 0", pipeline.cmd_selftest() == 0)
+    os.chdir(REPO)
+
+
+def test_intake_keylist_stays_in_sync():
+    print("== R1 anti-drift: the required-key list is stated in three places ==")
+    tpl = json.loads((REPO / "templates/config.example.json").read_text(encoding="utf-8"))
+    tpl_keys = {k for k in tpl["$intake"] if not k.startswith("$")}
+
+    # Parsing a fenced JSON block is not fragile — it IS json, and a broken fence fails
+    # loudly here rather than drifting quietly, which is the same reason the glossary
+    # switched from line numbers to section anchors.
+    text = (REPO / "setup/INTERVIEW.md").read_text(encoding="utf-8")
+    frag = next((f for f in re.findall(r"```json\n(.*?)```", text, re.S) if "$intake" in f), None)
+    check("INTERVIEW.md still carries a parseable $intake json block", frag is not None)
+    doc_keys = set(json.loads("{" + frag.rstrip().rstrip(",") + "}")["$intake"]) if frag else set()
+    doc_keys = {k for k in doc_keys if not k.startswith("$")}
+
+    code_keys = set(pipeline.REQUIRED_INTAKE["intel"])
+    check("pipeline.REQUIRED_INTAKE['intel'] == templates/config.example.json",
+          code_keys == tpl_keys, sorted(code_keys ^ tpl_keys))
+    check("templates/config.example.json == setup/INTERVIEW.md's json block",
+          tpl_keys == doc_keys, sorted(tpl_keys ^ doc_keys))
+
+
+def test_build_provenance():
+    print("== R5 build provenance: only the machine-checkable field is checked ==")
+    ok = {"built_with": {"skill_source": "github.com/x/y@v0.1.5",
+                         "skill_version": "0.1.5",
+                         "scripts_version": pipeline.TOOLKIT_VERSION}}
+    check("complete record -> ok", pipeline.built_with_state(ok)[0] == "ok")
+    check("absent -> absent", pipeline.built_with_state({})[0] == "absent")
+    no_src = {"built_with": dict(ok["built_with"])}
+    del no_src["built_with"]["skill_source"]
+    s, probs = pipeline.built_with_state(no_src)
+    check("missing skill_source -> bad (the source is the field that shows when it is "
+          "wrong; a version number never does)",
+          s == "bad" and any("skill_source" in p for p in probs), probs)
+    drift = {"built_with": dict(ok["built_with"], scripts_version="0.0.1")}
+    s, probs = pipeline.built_with_state(drift)
+    check("scripts_version that disagrees with the running scripts -> bad",
+          s == "bad" and any(pipeline.TOOLKIT_VERSION in p for p in probs), probs)
+    check("skill_version is NOT checked against anything (it is a declared value, and "
+          "treating a claim as evidence is the defect being fixed)",
+          pipeline.built_with_state(
+              {"built_with": dict(ok["built_with"], skill_version="9.9.9")})[0] == "ok")
+
+    cfg = fresh_sandbox()
+    os.chdir(SANDBOX)
+    cfg["built_with"]["scripts_version"] = "0.0.1"
+    (SANDBOX / "config.json").write_text(json.dumps(cfg, indent=2), encoding="utf-8")
+    check("selftest catches the mismatch -> 2", pipeline.cmd_selftest() == 2)
+    os.chdir(REPO)
+
+
+def test_retraction_check():
+    print("== R4 dismissal retro-check: cited sources, and no self-hits ==")
+    cfg = fresh_sandbox()
+    root = SANDBOX
+    os.chdir(root)
+    cited = "https://example.com/cited-article"
+    quiet = "https://example.com/never-cited-anywhere"
+    mock_results(R("feed-a", "ok", [I(cited, "Cited"), I(quiet, "Quiet")]))
+    pipeline.cmd_fetch(root, cfg)
+    (root / "_pipeline/judgments.json").write_text(json.dumps(
+        [{"url": cited, "relevance": 0.9, "one_line": "x"},
+         {"url": quiet, "relevance": 0.9, "one_line": "x"}]), encoding="utf-8")
+    pipeline.cmd_apply(root, cfg)
+
+    # The rule this implements is about answers given from OUTSIDE the library, so
+    # that is the directory it has to look in first (references/keeper.md).
+    ans = root / "_pipeline/answers"
+    ans.mkdir(parents=True, exist_ok=True)
+    (ans / "2026-08-04-what-about-x.md").write_text(
+        "---\nstatus: pending-verification\n---\n# What I said\nPer www.example.com/cited-article/ ...\n",
+        encoding="utf-8")
+
+    import io
+    from contextlib import redirect_stdout
+    buf = io.StringIO()
+    with redirect_stdout(buf):
+        rc = pipeline.cmd_dismiss(root, cfg, cited, "off topic")
+    out = buf.getvalue()
+    check("dismissing a cited source warns", "RETRACTION-CHECK" in out, out[-300:])
+    check("the warning names the file that cited it", "answers/2026-08-04-what-about-x.md" in out)
+    check("it matches across www./scheme/trailing-slash spellings", "1 file(s)" in out)
+    check("it says out loud that it cannot tell the owner for you",
+          "cannot tell the owner for you" in out)
+    check("exit code is unchanged — this is a notice, not a gate", rc == 0)
+    retr = root / "_pipeline/retractions.jsonl"
+    check("the hit is recorded, so a later QC can ask whether the owner was told",
+          retr.is_file() and json.loads(retr.read_text(encoding="utf-8").splitlines()[0])["url"] == cited)
+
+    # ⭐ The failure a naive scope would guarantee. By now pipeline.log holds a
+    # `dismiss: <url>` line, pending.json held both urls and calibration.jsonl has one
+    # row per judged item — a walk from the library root would hit every one of them.
+    logtext = (root / "_pipeline/logs/pipeline.log").read_text(encoding="utf-8")
+    calib = (root / "_pipeline/calibration.jsonl").read_text(encoding="utf-8")
+    check("the pipeline's own files really do contain the urls (else the next check "
+          "proves nothing)", cited in logtext and quiet in calib)
+    buf = io.StringIO()
+    with redirect_stdout(buf):
+        rc = pipeline.cmd_dismiss(root, cfg, quiet, "not relevant")
+    out = buf.getvalue()
+    check("dismissing an uncited source stays quiet (no self-hit from logs / "
+          "pending.json / calibration.jsonl)", "RETRACTION-CHECK" not in out, out[-300:])
+    check("exit code still 0", rc == 0)
+    check("nothing was recorded for it",
+          len(retr.read_text(encoding="utf-8").strip().splitlines()) == 1)
+
+    buf = io.StringIO()
+    with redirect_stdout(buf):
+        pipeline.cmd_evidence(root, cfg)
+    check("evidence surfaces the retraction count", "Retraction alerts: 1" in buf.getvalue())
+
+    check("a bare form too short to identify is dropped, while the scheme-bearing form "
+          "— which `://` anchors — is kept",
+          pipeline.url_variants("http://a/") == ["http://a/", "http://a"],
+          pipeline.url_variants("http://a/"))
+    check("a normal url keeps its www./scheme/slash spellings",
+          set(pipeline.url_variants("https://www.example.com/a/")) >=
+          {"https://www.example.com/a/", "www.example.com/a", "example.com/a"},
+          pipeline.url_variants("https://www.example.com/a/"))
+    os.chdir(REPO)
+
+
+# ⛔ MANUAL.{md,zh.md} is deliberately NOT in this list, and not because it is hard.
+# MANUAL.zh.md is an independently written Chinese manual (its own 0-6 chapter scheme,
+# 18 headings against the English 22) rather than a translation, so any structural
+# comparison would be red from the day it was written. Listing it and suppressing the
+# result would be a guardrail that only looks like coverage — which is the defect this
+# release exists to remove. It is excluded on the record, here, where the exclusion is.
+BILINGUAL_PAIRS = [("CHANGELOG.md", "CHANGELOG.zh.md"), ("SAFETY.md", "SAFETY.zh.md")]
+
+
+def doc_sections(text):
+    """[(level, title, body)] — split a markdown document on its headings."""
+    out, cur = [], None
+    for line in text.splitlines():
+        m = re.match(r"^(#{1,6})\s+(.*)$", line)
+        if m:
+            cur = [len(m.group(1)), m.group(2).strip(), []]
+            out.append(cur)
+        elif cur is not None:
+            cur[2].append(line)
+    return [(lv, ti, "\n".join(body)) for lv, ti, body in out]
+
+
+def doc_drift(en_text, zh_text):
+    """Problems between a document and its translation — [] when they agree.
+
+    Compares two quantities that do not depend on the language: the backticked tokens
+    a section mentions, and how many list items it has. Heading text is not compared
+    (a translated heading is a different string), and neither is prose (the two are
+    not sentence-for-sentence, so a word-level check would cry wolf daily and end up
+    suppressed — which is how a check dies).
+
+    Deliberately NOT a heading-count comparison: measured against the commit that
+    motivated all this (4c05c1c, an English-only edit that went unnoticed for four
+    days), the heading sequence was byte-identical before and after. The drift was
+    entirely inside one section.
+
+    Containment rather than set equality, because one published entry writes `.docx`
+    in English backticks and plain in Chinese — and that entry is shipped history we
+    do not edit. Containment lets the formatting difference pass without blunting the
+    check: a token missing outright is still missing.
+
+    Kept at module level so a reviewer can point it at any two revisions rather than
+    having to trust this file's own verdict.
+    """
+    en, zh = doc_sections(en_text), doc_sections(zh_text)
+    if len(en) != len(zh):
+        return ["section count: %d vs %d" % (len(en), len(zh))]
+    tokens = lambda body: set(re.findall(r"`([^`\n]+)`", body))
+    items = lambda body: len([l for l in body.splitlines()
+                              if re.match(r"^\s*(?:[-*+]|\d+\.)\s+", l)])
+    bad = []
+    for (lv_a, ti_a, body_a), (lv_b, _ti_b, body_b) in zip(en, zh):
+        if lv_a != lv_b:
+            bad.append("%s: heading level %d vs %d" % (ti_a, lv_a, lv_b))
+            continue
+        gone = sorted(t for t in tokens(body_a) if t not in body_b)
+        new = sorted(t for t in tokens(body_b) if t not in body_a)
+        if gone:
+            bad.append("%s: absent from the Chinese: %s" % (ti_a, gone))
+        if new:
+            bad.append("%s: absent from the English: %s" % (ti_a, new))
+        if items(body_a) != items(body_b):
+            bad.append("%s: %d list items vs %d" % (ti_a, items(body_a), items(body_b)))
+    return bad
+
+
+def test_bilingual_docs_in_sync():
+    print("== R6 bilingual user docs: language-invariant drift check ==")
+    for en_name, zh_name in BILINGUAL_PAIRS:
+        bad = doc_drift((REPO / en_name).read_text(encoding="utf-8"),
+                        (REPO / zh_name).read_text(encoding="utf-8"))
+        check("%s <-> %s: no section drifted" % (en_name, zh_name), not bad,
+              " | ".join(bad[:4]))
+
+    # The check has to be shown catching something, or a green here only means the
+    # documents happen to agree today. This is the drift it was built from, verbatim.
+    drifted_en = "# T\n\n## S\n\nsee `E1` and `E2`\n\n1. a\n2. b\n"
+    drifted_zh = "# T\n\n## S\n\n见 `E1`\n"
+    check("it catches a token added on one side only",
+          any("E2" in p for p in doc_drift(drifted_en, drifted_zh)),
+          doc_drift(drifted_en, drifted_zh))
+    check("it catches a list that grew on one side only",
+          any("list items" in p for p in doc_drift(drifted_en, drifted_zh)))
+    check("MANUAL is not in the checked pairs (excluded on the record, above)",
+          not any("MANUAL" in n for pair in BILINGUAL_PAIRS for n in pair))
+
+
 def main():
+    # Discovered, not listed. The register used to be hand-maintained, so a new test
+    # that nobody remembered to add would report nothing and read exactly like a test
+    # that passed — a success signal detached from the thing it claims about, which is
+    # the failure mode several rules in this release exist to prevent.
+    tests = [(n, f) for n, f in sorted(globals().items())
+             if n.startswith("test_") and callable(f)]
     try:
-        test_feed_parsing()
-        test_library_type_validation()
-        test_injection_rule_check()
-        test_constant_score_warning()
-        test_cadence_debt()
-        test_evidence_and_calibration()
-        test_status_classification()
-        test_hn_client_side_filter()
-        test_source_health_banner()
-        test_manual_add()
-        test_pipeline_flow()
-        test_dismissed_status_one_way()
-        test_draft_day_window()
-        test_selftest()
-        test_index()
+        for name, fn in tests:
+            fn()
     finally:
         os.chdir(REPO)
         shutil.rmtree(_TMP, ignore_errors=True)
-    print("\n=== toolkit tests: %d pass / %d fail ===" % (PASS[0], FAIL[0]))
+    print("\n=== toolkit tests: %d functions, %d pass / %d fail ==="
+          % (len(tests), PASS[0], FAIL[0]))
     return FAIL[0]
 
 

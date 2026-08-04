@@ -42,7 +42,7 @@ from pathlib import Path
 
 import fetch_rss
 
-TOOLKIT_VERSION = "0.1.4"
+TOOLKIT_VERSION = "0.1.5"
 DEFAULT_THRESHOLD = 0.7
 SILVER_STALE_DAYS = 14
 
@@ -151,6 +151,164 @@ def library_shapes(config):
                 "type %r is not one of %s (a typo here silently mis-shapes the whole library)"
                 % (bad[0], "/".join(VALID_TYPES)), "")
     return [v.lower() for v in vals], "", ""
+
+
+# ---------------------------------------------------------------- the intake record
+
+# R1/R2 — until now the Intake gate was held up by prose alone. SCAFFOLD.md's exit
+# checklist asks that "nothing in $intake is agent-inferred", and that sentence stays
+# true when the whole field is missing: a real library shipped with `keeper` never
+# recorded and never discussed, and the check passed on the way out.
+INTAKE_KEY = "$intake"
+UNRECORDED_KEY = "$unrecorded"
+VALID_DECIDED_BY = ("user-typed", "user-selected", "default-accepted")
+FORBIDDEN_DECIDED_BY = "agent-inferred"
+# These three have no sensible default, so `default-accepted` on them means it was
+# really inferred and nobody was told (setup/INTERVIEW.md § Intake).
+NO_DEFAULT_KEYS = ("domain", "topics", "sources")
+
+# Which decisions each shape has to have on record. Kept HERE, in the one file that
+# travels with a library, and kept honest by a toolkit-side test that asserts this
+# constant, templates/config.example.json and setup/INTERVIEW.md's json block all
+# agree — when you cannot have a single source, make the duplication checkable.
+REQUIRED_INTAKE = {
+    "intel":  ("shape", "domain", "topics", "sources", "cadence", "threshold", "keeper"),
+    "import": ("shape", "domain", "categories", "mode", "keeper"),
+    "data":   ("shape", "domain", "sources", "cadence", "keeper"),
+}
+
+
+def required_intake_keys(shapes):
+    """The union of the required decisions across every shape this library declares.
+
+    Union rather than primary-only: a composite library really did make both sets of
+    decisions. It also fails in the safe direction — naming an extra shape can only
+    ADD requirements, so the list can never be shortened by editing `type`.
+    """
+    keys = []
+    for s in shapes:
+        for k in REQUIRED_INTAKE.get(s, ()):
+            if k not in keys:
+                keys.append(k)
+    return keys
+
+
+def intake_state(config, shapes):
+    """(state, problems, note) for config['$intake'].
+
+    state: "ok" | "unrecorded" | "absent" | "bad"
+
+    ⛔ **This reads the VALUE of each `decided_by` field. It must never text-match the
+    config as a whole.** templates/config.example.json explains the rule in a
+    `$comment` that contains the string "agent-inferred" verbatim, and scaffold copies
+    that template into every library — so a substring check over the file would fail
+    every correctly-built library there is. That is the same mistake in a new costume:
+    a check that catches the sentence forbidding the thing. Ask it out loud before
+    writing any check here: *would this flag the words that state the rule?*
+
+    Grading note: "absent" is a FAILURE, not a lenient legacy pass. Warning on absence
+    and failing on a partial record would mean writing nothing was safer than writing
+    six fields of seven — and an old library is indistinguishable on disk from a new
+    one whose agent skipped the gate, which is the case this check exists for.
+    """
+    intake = config.get(INTAKE_KEY)
+    if intake is None:
+        return "absent", [], ""
+    if not isinstance(intake, dict):
+        return "bad", ["%s is not an object" % INTAKE_KEY], ""
+
+    problems = []
+    # Validate every record that IS present, legacy or not: an invented provenance is
+    # a false claim whether or not the library predates the record-keeping.
+    for key, rec in sorted(intake.items()):
+        if key.startswith("$"):
+            continue
+        if not isinstance(rec, dict) or "value" not in rec or "decided_by" not in rec:
+            problems.append("%s is not a {value, decided_by} record" % key)
+            continue
+        by = rec.get("decided_by")
+        if by == FORBIDDEN_DECIDED_BY:
+            problems.append("%s is %r — decided quietly, so they never knew it was a "
+                            "question. Go back and ask." % (key, FORBIDDEN_DECIDED_BY))
+        elif by not in VALID_DECIDED_BY:
+            problems.append("%s has decided_by=%r; expected one of %s"
+                            % (key, by, " / ".join(VALID_DECIDED_BY)))
+        elif by == "default-accepted" and key in NO_DEFAULT_KEYS:
+            problems.append("%s is 'default-accepted', but it has no sensible default — "
+                            "a default there means it was really inferred" % key)
+
+    unrecorded = intake.get(UNRECORDED_KEY)
+    if unrecorded is not None:
+        if not (isinstance(unrecorded, str) and unrecorded.strip()):
+            problems.append("%s must carry a one-line reason — an empty acknowledgement "
+                            "says nothing" % UNRECORDED_KEY)
+        return ("bad" if problems else "unrecorded"), problems, (unrecorded or "").strip()
+
+    missing = [k for k in required_intake_keys(shapes) if k not in intake]
+    if missing:
+        problems.append("no record of %s (required for shape %s)"
+                        % (", ".join(missing), "+".join(shapes)))
+    return ("bad" if problems else "ok"), problems, ""
+
+
+def unrecorded_hint():
+    """The repair path, printed with the failure so it can be pasted rather than invented.
+
+    A guardrail whose only route back to green is fabricating a `decided_by` would be
+    demanding the exact dishonesty the record exists to prevent. So the escape is an
+    admission, not a claim — and it stays visible on every later run.
+    """
+    return ('record the decisions in config.json, or — if this library was built before '
+            'the intake record existed — say so on the record:\n'
+            '           "%s": { "%s": "built before the intake record; provenance unknown" }\n'
+            '         Never invent a decided_by you cannot stand behind.' % (INTAKE_KEY, UNRECORDED_KEY))
+
+
+# ---------------------------------------------------------------- build provenance
+
+BUILT_WITH_KEY = "built_with"
+
+
+def built_with_state(config):
+    """(state, problems) for config['built_with'].  state: "ok" | "absent" | "bad"
+
+    `toolkit_version` records the version of the TEMPLATE this config was copied from.
+    That is not the version of the spec the building agent actually followed: one real
+    library carries 0.1.4 in its config while the session that built it was running a
+    locally cached 0.1.3 skill — and nothing on disk showed the difference, so every
+    case analysis done by version files that library under the wrong release.
+
+    The load-bearing field here is therefore not a version but `skill_source`. Two
+    version numbers look identical whether or not they are true; a source does not.
+    "a local cached copy" is self-incriminating in exactly the case that matters, and
+    "I no longer know which version that was" is a more useful record than a confident
+    wrong number.
+
+    So only `scripts_version` is checked, because it is the only one a machine can
+    check: it must match the constant in the pipeline.py that is actually running.
+    `skill_version` is kept as a declared value and never treated as evidence.
+    """
+    bw = config.get(BUILT_WITH_KEY)
+    if bw is None:
+        return "absent", []
+    if not isinstance(bw, dict):
+        return "bad", ["%s is not an object" % BUILT_WITH_KEY]
+    problems = []
+    src = bw.get("skill_source")
+    if not (isinstance(src, str) and src.strip()):
+        problems.append("%s.skill_source is missing — where the skill was READ from "
+                        "(a repo URL, or a local cache path) is the one part of this "
+                        "record that shows when it is wrong" % BUILT_WITH_KEY)
+    sv = bw.get("scripts_version")
+    if not (isinstance(sv, str) and sv.strip()):
+        problems.append("%s.scripts_version is missing — paste the version these scripts "
+                        "report, do not type it from memory" % BUILT_WITH_KEY)
+    elif sv.strip() != TOOLKIT_VERSION:
+        problems.append("%s.scripts_version is %r but the scripts in this library are %r "
+                        "— either they were re-copied without updating config, or the "
+                        "value was typed rather than pasted"
+                        % (BUILT_WITH_KEY, sv.strip(), TOOLKIT_VERSION))
+    return ("bad" if problems else "ok"), problems
 
 
 # The injection red line is mandatory in every library's own memory file (SKILL.md
@@ -338,9 +496,12 @@ def cmd_fetch(root, config):
     conn.commit()
     n_pending = write_pending(root, config, conn)
     conn.close()
+    # The version belongs on this line because pipeline.log is append-only, timestamped
+    # and machine-written: with it, every library's history carries its own version
+    # coordinates, and "which release was this round run under?" stops being a guess.
     log(root, config, "fetch: %d new candidates (deduped); %d awaiting judgment in pending.json "
-        "[sources: %d ok / %d empty / %d gap / %d failed / %d blocked]"
-        % (fresh, n_pending, ok_s, empty_s, gap_s, fail_s, blocked_s))
+        "[sources: %d ok / %d empty / %d gap / %d failed / %d blocked] [toolkit %s]"
+        % (fresh, n_pending, ok_s, empty_s, gap_s, fail_s, blocked_s, TOOLKIT_VERSION))
     if fail_s:
         log(root, config, "note: %d source(s) FAILED transiently — their items were NOT "
             "fetched; they will be retried next round (a failed fetch is not an empty result)"
@@ -407,6 +568,22 @@ def cmd_evidence(root, config):
 
     inj_state, inj_detail = injection_rule_state(root)
     lines.append("Injection red line: %s (%s)" % (inj_state, inj_detail))
+
+    shapes, _problem, _inferred = library_shapes(config)
+    i_state, _i_problems, i_note = intake_state(config, shapes)
+    lines.append("Intake record: %s%s" % (i_state, (" — " + i_note) if i_note else ""))
+
+    # Retraction alerts belong in evidence for the same reason the Silver counts do:
+    # a QC round can ask whether the owner was told, instead of taking it on trust.
+    retr = pipeline_dir(root, config) / "retractions.jsonl"
+    n_retr = 0
+    if retr.is_file():
+        try:
+            n_retr = len([l for l in retr.read_text(encoding="utf-8").splitlines() if l.strip()])
+        except OSError:
+            n_retr = -1
+    lines.append("Retraction alerts: %s (dismissals that hit a cited source; each one owed "
+                 "the owner a word)" % ("unreadable" if n_retr < 0 else n_retr))
     lines += ["```"]
     conn.close()
     print("\n".join(lines))
@@ -724,6 +901,92 @@ def cmd_apply(root, config):
 # ---------------------------------------------------------------- promote / dismiss
 
 
+def url_variants(url):
+    """The handful of literal spellings the same URL is usually written in.
+
+    Deliberately small. A scheme, a leading `www.`, a trailing slash and a `#fragment`
+    are formatting; a query string is NOT — for some sites the query is the identity —
+    so it is never stripped. Matching stays case-sensitive: over-matching would raise
+    retraction alerts for things nobody cited, and an alert that cries wolf gets tuned
+    out, which costs more than the occasional miss. Under-reporting is the safe
+    direction here, because this is a reminder and never a gate.
+    """
+    u = (url or "").strip().split("#", 1)[0]
+    if not u:
+        return []
+    bare = re.sub(r"^https?://", "", u)
+    forms = {u, u.rstrip("/")}          # scheme-bearing: `://` anchors it at any length
+    stripped = {bare, bare.rstrip("/")}
+    for b in tuple(stripped):
+        stripped.add(b[4:] if b.startswith("www.") else "www." + b)
+    # A bare form has no `://` to anchor it, so a short one matches unrelated prose —
+    # `www.a` would hit www.amazon.com, and `a` would hit everything. Drop those
+    # instead of guessing: a reminder that stays quiet costs less than one nobody
+    # believes any more.
+    forms |= {c for c in stripped if len(c) >= 8}
+    return sorted((f for f in forms if f), key=lambda f: (-len(f), f))
+
+
+def citation_scan_dirs(root, config):
+    """The directories a dismissal is checked against — an explicit allowlist.
+
+    ⛔ Never walk from the library root. `_pipeline/logs/pipeline.log`,
+    `_pipeline/pending.json` and `_pipeline/calibration.jsonl` each contain every URL
+    the pipeline has ever handled, so a root walk would report a hit for every
+    dismissal — including the one being made at that moment.
+
+    `answers/` comes first because it is what the rule is actually about: an answer
+    given from outside the library files its sources as Bronze, and if one is later
+    dismissed the owner has to be told (references/keeper.md § Answering from outside
+    the library). notes/ and briefs/ are the same question asked of Gold.
+    """
+    paths = config.get("paths", {})
+    return [pipeline_dir(root, config) / "answers",
+            root / paths.get("notes", "notes"),
+            root / paths.get("briefs", "briefs")]
+
+
+def find_citations(root, config, url):
+    """Files under the allowlisted directories that quote this URL."""
+    forms = url_variants(url)
+    hits = []
+    if not forms:
+        return hits
+    for d in citation_scan_dirs(root, config):
+        if not d.is_dir():
+            continue
+        try:
+            files = sorted(d.rglob("*.md"))
+        except OSError:
+            continue
+        for f in files:
+            try:
+                body = f.read_text(encoding="utf-8", errors="replace")
+            except OSError:
+                continue   # one unreadable file must never break a dismissal
+            if any(v in body for v in forms):
+                hits.append(f)
+    return hits
+
+
+def record_retraction(root, config, url, reason, files):
+    """Append the hit to _pipeline/retractions.jsonl (same trick as calibration.jsonl:
+    a file, not a table, so no schema moves).
+
+    Printing it would only reach whoever is running the command. Recording it is what
+    lets a later QC round ask the question that matters — was the owner ever told? —
+    of a keeper that has moved on.
+    """
+    path = pipeline_dir(root, config) / "retractions.jsonl"
+    try:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        with path.open("a", encoding="utf-8") as fh:
+            fh.write(json.dumps({"ts": now_ts(), "url": url, "reason": reason or None,
+                                 "cited_in": files}, ensure_ascii=False) + "\n")
+    except OSError:
+        pass  # the notice already printed; bookkeeping must not fail a dismissal
+
+
 def cmd_promote(root, config, url):
     conn = connect(root)
     cur = conn.execute("UPDATE silver SET promoted=1, promoted_at=? WHERE url=?",
@@ -755,6 +1018,27 @@ def cmd_dismiss(root, config, url, reason):
     conn.close()
     if found:
         log(root, config, "dismiss: %s%s" % (url, (" - reason: " + reason) if reason else ""))
+        # R4 — references/keeper.md § Answering from outside the library: a source that
+        # gets dismissed after it was cited makes something ALREADY SAID unreliable.
+        # That rule was prose, so nothing was looking. Runs after the commit, and never
+        # touches the exit code: this is a notice, not a gate.
+        try:
+            hits = find_citations(root, config, url)
+        except OSError:
+            hits = []
+        if hits:
+            rel = [h.relative_to(root).as_posix() for h in hits]
+            record_retraction(root, config, url, reason, rel)
+            log(root, config,
+                "RETRACTION-CHECK this url is still cited in %d file(s): %s%s — tell the "
+                "OWNER, unprompted: name the answer or note affected and say that part is "
+                "now unreliable, then update its status. Recorded in %s/retractions.jsonl."
+                % (len(rel), ", ".join(rel[:5]), " …" if len(rel) > 5 else "",
+                   pipeline_dir(root, config).name))
+            log(root, config,
+                "  ⚠️ This finds the common spellings of a URL, not every one, and it can "
+                "only make the fact available — it cannot tell the owner for you. A quiet "
+                "result is not proof that nothing cites it.")
         return 0
     print("dismiss: url not found in Silver (run `stats`): %s" % url, file=sys.stderr)
     return 2
@@ -899,6 +1183,42 @@ def cmd_selftest(root_hint=None):
         else:
             check("injection red line present in memory file", False, inj_detail)
             failures_cfg.append("injection-red-line")
+
+        # R1/R2 — the Intake record. See intake_state() for the grading rationale and
+        # for the one implementation rule that must not be broken (no text matching).
+        i_state, i_problems, i_note = intake_state(config, shapes)
+        if i_state == "ok":
+            check("intake record complete (shape %s)" % "+".join(shapes), True)
+        elif i_state == "unrecorded":
+            # A scar, not an exemption: it prints on every run, and it is greppable.
+            check("intake record — DECLARED UNRECORDED", True,
+                  "%s; nobody is claiming who decided what" % i_note)
+        elif i_state == "absent":
+            check("intake record present", False,
+                  "config.json has no %s — %s" % (INTAKE_KEY, unrecorded_hint()))
+            failures_cfg.append("intake")
+        else:
+            for p in i_problems:
+                check("intake: %s" % p, False)
+            failures_cfg.append("intake")
+
+        # R5 — build provenance. One legacy declaration covers both records: a library
+        # that predates the intake record certainly predates this one.
+        b_state, b_problems = built_with_state(config)
+        if i_state == "unrecorded":
+            check("build provenance (waived — intake declared unrecorded)", True,
+                  "one legacy declaration, not two")
+        elif b_state == "ok":
+            check("build provenance recorded (%s)" % config[BUILT_WITH_KEY].get("skill_source"), True)
+        elif b_state == "absent":
+            check("build provenance recorded", False,
+                  "config.json has no %r — record where the skill was READ from, and paste "
+                  "the scripts' own version rather than typing one" % BUILT_WITH_KEY)
+            failures_cfg.append(BUILT_WITH_KEY)
+        else:
+            for p in b_problems:
+                check("build provenance: %s" % p, False)
+            failures_cfg.append(BUILT_WITH_KEY)
 
         try:
             pdir = pipeline_dir(root, config)
