@@ -94,6 +94,7 @@ you are already producing:
 
 ```json
 "$intake": {
+  "shape":     { "value": "intel", "decided_by": "user-selected" },
   "domain":    { "value": "agent tooling for practitioners", "decided_by": "user-typed" },
   "topics":    { "value": ["…"],  "decided_by": "user-selected" },
   "sources":   { "value": ["…"],  "decided_by": "user-selected" },

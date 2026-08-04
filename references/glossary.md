@@ -134,7 +134,7 @@ before building one.
 | **Name** | **Fetch Honesty Protocol** (采集诚实协议) |
 | **Definition** | Every fetch lands in exactly one of five states — `ok / empty / gap / failed / blocked` — **each of which implies a different fix** |
 | **Category** | Status protocol |
-| **Applies to** | ⭐ **every library type.** This is the one thing with cross-type code-reuse evidence |
+| **Applies to** | ⭐ **every library type.** It is the one protocol whose *code* has been reused across types — `examples/etl-kb` and `examples/intel-kb` call the same fetch layer. ⚠️ Read that as written: **this code has been reused**, not *this idea gets reimplemented*. A 2026-08 case rewrote the whole pipeline from scratch in a fresh workspace, carried Medallion over verbatim, and dropped all five states — `blocked`/`gap`/`failed`/`empty` appear zero times in it. Naming a rule does not make it travel; **landing it on a decision the implementer cannot route around** does |
 | **Spec lives in** | `references/pipeline-discipline.md` § *A failed fetch is not an empty result* |
 | **Enforced in code by** | `scripts/fetch_rss.py` (`FetchGap` / `FetchFailed` / `FetchBlocked` + two-layer classification) · the `fetch_log` table · the health banner in `scripts/pipeline.py` · assertions in `tests/test_pipeline.py` |
 | **Does NOT cover** | content quality · relevance · tiering |

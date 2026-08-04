@@ -127,6 +127,26 @@ old (needs 3.9+), switch the plan to **Level-0 mode** (SKILL.md) and say so
 plainly — do not scaffold broken automation, and do not false-negative into
 Level-0 when a runtime is right there.
 
+### Scripts you write yourself
+
+You may add scripts of your own — a fetcher for a source the toolkit doesn't
+cover, a one-off importer, an export helper. Two rules, and they exist because
+two real builds went to opposite extremes and the spec said nothing either time:
+
+1. **Leave them in the library.** One build wrote its collection scripts, used
+   them, and deleted them; the run could not be reproduced afterwards and the
+   scores it produced could not be explained. A script that ran is part of how
+   the library got its contents. Deleting it discards the provenance of every
+   row it wrote.
+2. **Mark them as not shipped with the toolkit** — one comment line at the top
+   (`# not part of personal-wiki-toolkit — written for this library`). Without
+   it, the next person cannot tell which files a toolkit update will overwrite
+   and which are theirs.
+
+Do not modify the four toolkit scripts to add your behaviour; put it in a new
+file. `pipeline.py stats` reports staleness by comparing version strings, and a
+locally edited copy will silently claim to be current.
+
 ## 5. Databases
 
 Created by the scripts on first run — do NOT hand-craft SQLite files.

@@ -35,6 +35,8 @@
     "notes": "notes",
     "briefs": "briefs",
     "inbox": "inbox",
+    "outputs": "outputs",
+    "$comment": "outputs/ is where things the owner asked for land — a report, an export, a rendered page. They are products of the library, not tiers of it, so they do not belong in notes/ or briefs/. Declared here so the next session can find them; created on first use, not at scaffold. Deliberately NOT indexed by index_db.py (same reason _pipeline isn't): a rendered report is a copy of knowledge, and indexing it would return the same claim twice.",
     "pipeline": "_pipeline"
   },
   "$intake": {
