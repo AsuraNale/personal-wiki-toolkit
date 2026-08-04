@@ -101,7 +101,7 @@ Details and per-platform caveats: `docs/compatibility.md`.
 
 ## Status
 
-**v0.1.5 — pre-1.0.** The build path is validated end-to-end on **three agent
+**v0.1.5.1 — pre-1.0.** The build path is validated end-to-end on **three agent
 ecosystems** — Claude Code (local *and* cloud), Tencent WorkBuddy, and Codex —
 each a fresh agent that built a working library from just this repo plus a topic,
 unaided, in Level-0 *and* full-SQLite modes. A later live session exercised the

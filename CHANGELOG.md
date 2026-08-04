@@ -6,6 +6,32 @@ plain-language walkthrough is [MANUAL.md](MANUAL.md) (中文:[MANUAL.zh.md](MANU
 
 ---
 
+## v0.1.5.1 — 2026-08-04
+
+One behaviour change, held back from v0.1.5 while it was being decided. The warning
+about a source whose items all received the same score now asks a better question
+before it fires: **has this source ever scored any other way?**
+
+- A source that has always scored one value — an index-page feed, say — is no
+  longer flagged for scoring that way again. That was the case the warning itself
+  admitted it could not tell apart, and now it does not have to guess.
+- A source whose scores used to vary and collapsed to a single value this round is
+  flagged, and the message says which: *its previous 6 judgements ran 0.10-0.60*.
+- **Where there is no history, nothing changes at all.** The record it reads,
+  `_pipeline/calibration.jsonl`, only began being written in v0.1.4 and no library
+  has run `apply` since, so every existing library takes this path — and takes it
+  with the same wording as before. An improvement that quietly switched the check
+  off wherever it had no data would be worse than leaving it alone.
+- One blanket-scored round does **not** earn a source that silence; it takes two
+  separate rounds landing on the same value. Otherwise the check could be turned
+  off by exactly the behaviour it exists to catch.
+
+Still a note and never a rejection. A machine cannot tell a lazy blanket score from
+a correct one, and this does not pretend otherwise — it changes what the warning has
+grounds to suspect, not who decides.
+
+---
+
 ## v0.1.5 — 2026-08-04
 
 An interior release: **no new features, and nothing about using this changes.** It

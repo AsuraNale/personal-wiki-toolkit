@@ -42,7 +42,7 @@ from pathlib import Path
 
 import fetch_rss
 
-TOOLKIT_VERSION = "0.1.5"
+TOOLKIT_VERSION = "0.1.5.1"
 DEFAULT_THRESHOLD = 0.7
 SILVER_STALE_DAYS = 14
 
@@ -771,7 +771,68 @@ def write_draft_brief(root, config, conn):
     return path, len(rows)
 
 
-def constant_score_warning(judgments, seen_source):
+MIN_CONSTANT_RUN = 5
+
+
+def calibration_history(root, config, exclude_ts=None):
+    """{source: [(ts, relevance), …]} of PAST judgements, from calibration.jsonl.
+
+    Returns {} when the file is absent, unreadable or empty — which is the state of
+    every library today, because the log only started being written in v0.1.4 and no
+    library has run `apply` since. That case must fall back to the previous behaviour,
+    never to silence: an improvement that switches the check off wherever it has no
+    data would be worse than not making it.
+
+    `exclude_ts` drops the round currently being judged. Every entry from one `apply`
+    shares a single timestamp, so this is exact — and it matters because
+    `record_calibration` writes this round BEFORE the warning is computed. Without it
+    a source whose only history is the round under judgement reads as "always
+    constant" and suppresses its own warning. The caller also snapshots the history
+    before appending; this is the second lock, because that ordering is the kind of
+    thing a later edit reverses without noticing.
+
+    Both locks are load-bearing, by mutation: neutering this filter alone fails the
+    suite, and reversing the caller's ordering alone does NOT — this filter carries it
+    on its own. Only removing both breaks the behaviour. So if you are here to tidy
+    one of them away, the other will not cover for you.
+    """
+    path = pipeline_dir(root, config) / "calibration.jsonl"
+    hist = {}
+    if not path.is_file():
+        return hist
+    try:
+        lines = path.read_text(encoding="utf-8").splitlines()
+    except OSError:
+        return hist
+    for line in lines:
+        if not line.strip():
+            continue
+        try:
+            rec = json.loads(line)
+            ts, rel = rec["ts"], float(rec["relevance"])
+        except (ValueError, TypeError, KeyError):
+            continue    # one half-written line must not blind the check
+        if exclude_ts and ts == exclude_ts:
+            continue
+        hist.setdefault(rec.get("source", "?"), []).append((ts, rel))
+    return hist
+
+
+def source_scores_always_constant(prior):
+    """True when this source's past judgements are one value, across ≥2 rounds.
+
+    The two-round floor is the point. Requiring only "≥5 past items, all the same"
+    would let a single blanket-scored round teach the check to stay quiet about that
+    source forever — the mechanism disarmed by exactly the behaviour it exists to
+    catch. Two separate rounds landing on the same value looks like a source that
+    genuinely deserves one score; one round looks like one round.
+    """
+    if len(prior) < MIN_CONSTANT_RUN:
+        return False
+    return len({rel for _ts, rel in prior}) == 1 and len({ts for ts, _rel in prior}) >= 2
+
+
+def constant_score_warning(judgments, seen_source, history=None):
     """F3 — warn when one source's items all carry an identical score.
 
     In a real round 76% of candidates got a per-source constant (52 items at 0.15,
@@ -783,7 +844,14 @@ def constant_score_warning(judgments, seen_source):
     correct one. In that same round the 52 items at 0.15 really were all issue-index
     pages, and one score for all of them was the right call. Only a person can tell
     the two apart — so this reports, and lets the person decide.
+
+    `history` (from calibration_history) does not change that rule. It changes what
+    the rule has grounds to suspect: a source that has always scored one value is
+    behaving normally, while a source whose scores used to vary and collapsed to one
+    value this round is the case worth a second look. With no history — every library
+    today — the behaviour and the wording are exactly what they were before.
     """
+    history = history or {}
     by_source = {}
     for j in judgments:
         src = seen_source.get(j.get("url"), "?")
@@ -794,7 +862,17 @@ def constant_score_warning(judgments, seen_source):
         by_source.setdefault(src, []).append(rel)
     flagged = []
     for src, scores in by_source.items():
-        if len(scores) >= 5 and len(set(scores)) == 1:
+        if not (len(scores) >= MIN_CONSTANT_RUN and len(set(scores)) == 1):
+            continue
+        prior = history.get(src, [])
+        if source_scores_always_constant(prior):
+            continue        # this is simply how this source has always scored
+        if len(prior) >= MIN_CONSTANT_RUN:
+            lo, hi = min(r for _t, r in prior), max(r for _t, r in prior)
+            flagged.append("%s: %d items all scored %.2f, where its previous %d "
+                           "judgements ran %.2f-%.2f" % (src, len(scores), scores[0],
+                                                         len(prior), lo, hi))
+        else:
             flagged.append("%s: %d items all scored %.2f" % (src, len(scores), scores[0]))
     if not flagged:
         return ""
@@ -888,11 +966,14 @@ def cmd_apply(root, config):
     path, n_draft = write_draft_brief(root, config, conn)
     n_pending = write_pending(root, config, conn)  # judged items leave pending.json
     conn.close()
+    # Snapshot the history BEFORE this round joins it (and see calibration_history's
+    # exclude_ts, which makes the same guarantee independently of this ordering).
+    history = calibration_history(root, config, exclude_ts=ts)
     record_calibration(root, config, calib)
     log(root, config, "apply: %d kept (>=%.2f) / %d low / %d skipped; draft brief -> %s "
         "(%d items, union of today); %d still pending"
         % (kept, thr, low, skipped, path.name, n_draft, n_pending))
-    warn = constant_score_warning(judgments, seen_source)
+    warn = constant_score_warning(judgments, seen_source, history)
     if warn:
         log(root, config, warn)
     return 0

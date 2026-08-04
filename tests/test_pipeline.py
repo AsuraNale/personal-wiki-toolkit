@@ -903,6 +903,114 @@ def doc_drift(en_text, zh_text):
     return bad
 
 
+def test_constant_score_history():
+    print("== R11 constant scores: judged against the source's own history ==")
+    judg = [{"url": "u%d" % i, "relevance": 0.15} for i in range(6)]
+    src = {"u%d" % i: "feed-a" for i in range(6)}
+    hist = lambda pairs: {"feed-a": pairs}
+
+    # ⭐ The reverse sentinel FIRST. Two of the four cases below are "must stay
+    # silent", and silence proves nothing until something has been shown to fire —
+    # a check that never runs is silent too.
+    varied = [("2026-07-0%d 00:00:00Z" % d, 0.1 * d) for d in range(1, 7)]
+    warned = pipeline.constant_score_warning(judg, src, hist(varied))
+    check("a source whose scores used to vary and collapsed this round -> WARNS",
+          "constant scores" in warned, warned)
+    check("...and the warning states the contrast, not just the fact",
+          "previous 6 judgements ran 0.10-0.60" in warned, warned)
+
+    # Now the silences mean something.
+    same = [("2026-07-0%d 00:00:00Z" % d, 0.15) for d in range(1, 7)]
+    check("a source that has always scored one value, across rounds -> silent",
+          pipeline.constant_score_warning(judg, src, hist(same)) == "")
+
+    # ⭐ No history is every library today: the log started in v0.1.4 and nothing has
+    # run apply since. It must fall back to the OLD behaviour, and to the old words.
+    old_words = ("NOTE constant scores — feed-a: 6 items all scored 0.15. If that is a "
+                 "real judgement (e.g. they are all index pages), fine; if it is one "
+                 "blanket score standing in for reading them, it is what rule 3 "
+                 "forbids. Nobody but you can tell.")
+    check("no calibration file at all -> byte-identical to the previous behaviour",
+          pipeline.constant_score_warning(judg, src) == old_words,
+          pipeline.constant_score_warning(judg, src))
+    check("history too thin to mean anything -> same fallback",
+          pipeline.constant_score_warning(judg, src, hist(same[:3])) == old_words)
+
+    # ⭐ One blanket-scored round must not teach the check to stay quiet forever —
+    # that would be the mechanism disarmed by the very behaviour it exists to catch.
+    one_round = [("2026-07-01 00:00:00Z", 0.15)] * 6
+    check("6 identical scores from ONE round is not 'always constant' -> still warns",
+          "constant scores" in pipeline.constant_score_warning(judg, src, hist(one_round)))
+    check("the same 6 spread over two rounds IS -> silent",
+          pipeline.constant_score_warning(
+              judg, src, hist([("2026-07-01 00:00:00Z", 0.15)] * 3 +
+                              [("2026-07-02 00:00:00Z", 0.15)] * 3)) == "")
+
+    # End to end, including the trap: record_calibration writes this round BEFORE the
+    # warning is computed, so without exclude_ts a source's first round would suppress
+    # its own warning.
+    cfg = fresh_sandbox()
+    root = SANDBOX
+    os.chdir(root)
+    mock_results(R("feed-a", "ok", [I("https://ex.com/%d" % i, "T%d" % i) for i in range(6)]))
+    pipeline.cmd_fetch(root, cfg)
+    (root / "_pipeline/judgments.json").write_text(json.dumps(
+        [{"url": "https://ex.com/%d" % i, "relevance": 0.15, "one_line": "x"}
+         for i in range(6)]), encoding="utf-8")
+    import io
+    from contextlib import redirect_stdout
+    buf = io.StringIO()
+    with redirect_stdout(buf):
+        rc = pipeline.cmd_apply(root, cfg)
+    check("first apply warns — this round's own rows do not suppress it",
+          "constant scores" in buf.getvalue(), buf.getvalue()[-200:])
+    check("it is still a NOTE: apply exits 0", rc == 0)
+
+    cal = root / "_pipeline/calibration.jsonl"
+    check("the round was recorded even though it was flagged",
+          cal.is_file() and len(cal.read_text(encoding="utf-8").strip().splitlines()) == 6)
+    hist_read = pipeline.calibration_history(root, cfg)
+    check("calibration_history reads it back per source",
+          len(hist_read.get("feed-a", [])) == 6, sorted(hist_read))
+    # ⭐ The exclude_ts lock, isolated. cmd_apply also snapshots the history before
+    # appending, and that ordering alone hides this: with one prior round on record,
+    # counting the round under judgement as a second round is what tips a source into
+    # "always constant" and silences the warning about itself. Seeded by hand so the
+    # two rounds carry genuinely different timestamps.
+    seeded = "\n".join(json.dumps(
+        {"ts": "2026-07-01 00:00:00Z", "url": "https://old/%d" % i, "source": "feed-a",
+         "relevance": 0.15, "threshold": 0.7, "verdict": "low"}) for i in range(6))
+    cal.write_text(seeded + "\n", encoding="utf-8")
+    buf = io.StringIO()
+    with redirect_stdout(buf):
+        pipeline.cmd_apply(root, cfg)
+    check("with ONE prior constant round, this round still warns — the round being "
+          "judged is not allowed to count as its own corroboration",
+          "constant scores" in buf.getvalue(), buf.getvalue()[-260:])
+    now_rows = pipeline.calibration_history(root, cfg)["feed-a"]
+    a_ts = now_rows[-1][0]
+    check("calibration_history(exclude_ts=<this round>) drops exactly this round",
+          len(pipeline.calibration_history(root, cfg, exclude_ts=a_ts)["feed-a"])
+          == len(now_rows) - 6, len(now_rows))
+
+    intact = len(pipeline.calibration_history(root, cfg)["feed-a"])
+    with cal.open("a", encoding="utf-8") as fh:      # a half-written trailing line
+        fh.write("{ not json\n")
+    check("a corrupt line is skipped, and the rest of the history still parses",
+          len(pipeline.calibration_history(root, cfg).get("feed-a", [])) == intact,
+          (intact, pipeline.calibration_history(root, cfg).get("feed-a")))
+
+    # Phrolova's sentinel #1: with the log removed, behaviour returns to v0.1.5 —
+    # asserted against the exact previous wording, not merely "something warned".
+    cal.unlink()
+    buf = io.StringIO()
+    with redirect_stdout(buf):
+        pipeline.cmd_apply(root, cfg)
+    check("delete calibration.jsonl -> apply emits the pre-v0.1.5.1 message verbatim",
+          old_words in buf.getvalue(), buf.getvalue()[-260:])
+    os.chdir(REPO)
+
+
 def test_bilingual_docs_in_sync():
     print("== R6 bilingual user docs: language-invariant drift check ==")
     for en_name, zh_name in BILINGUAL_PAIRS:
